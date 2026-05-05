@@ -35,6 +35,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [submitVisible, setSubmitVisible] = useState(false);
 
   const status = useMemo(() => {
     if (submitting) {
@@ -82,22 +83,57 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       document.documentElement.getAttribute("data-motion") || "full";
     const motionFactor = motionLevel === "soft" ? 0.72 : motionLevel === "off" ? 0 : 1;
     if (prefersReducedMotion) {
+      setSubmitVisible(true);
       return;
     }
     if (motionFactor === 0) {
+      setSubmitVisible(true);
       return;
     }
     const t = (duration: number) => duration * motionFactor;
 
     const ctx = gsap.context(() => {
       const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
+      const sparkles = gsap.utils.toArray<HTMLElement>(".login-logo-sparkle");
       intro
         .from(".login-card", { y: 20, opacity: 0, duration: t(0.58) }, 0)
-        .from(".login-brand", { y: 10, opacity: 0, duration: t(0.35) }, 0.1)
+        .from(".login-brand", { y: 10, opacity: 0, duration: t(0.24) }, 0.08)
+        .from(".login-brand-mark", { scale: 0.7, rotate: -14, duration: t(0.28), ease: "back.out(1.8)" }, 0.08)
+        .fromTo(
+          ".login-brand-mark svg",
+          { scale: 0.8 },
+          { scale: 1.06, yoyo: true, repeat: 1, duration: t(0.18), ease: "power2.inOut" },
+          0.16
+        )
+        .fromTo(
+          sparkles,
+          { x: 0, y: 0, scale: 0, opacity: 0 },
+          {
+            x: (_, element) => Number((element as HTMLElement).dataset.tx || 0),
+            y: (_, element) => Number((element as HTMLElement).dataset.ty || 0),
+            scale: 0.95,
+            opacity: 0.9,
+            duration: t(0.24),
+            stagger: t(0.02),
+            ease: "power2.out",
+          },
+          0.2
+        )
+        .to(
+          sparkles,
+          {
+            scale: 0,
+            opacity: 0,
+            duration: t(0.34),
+            stagger: t(0.015),
+            ease: "power2.in",
+          },
+          0.42
+        )
         .from(".login-title", { y: 12, opacity: 0, duration: t(0.35) }, 0.14)
         .from(".login-subtitle", { y: 8, opacity: 0, duration: t(0.3) }, 0.18)
-        .from(".login-field", { y: 8, opacity: 0, duration: t(0.3), stagger: t(0.06) }, 0.2)
-        .from(".login-submit", { y: 8, opacity: 0, duration: t(0.28) }, 0.34);
+        .from(".login-field", { y: 8, opacity: 0, duration: t(0.3), stagger: t(0.06) }, 0.28)
+        .call(() => setSubmitVisible(true), [], 0.72);
 
       gsap.to(".breath-circle", {
         scale: 1.2,
@@ -329,6 +365,14 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
         <div className="login-brand">
           <div className="login-brand-mark" aria-hidden>
             <HeartPulse size={18} />
+            <span className="login-logo-sparkle" data-tx="-28" data-ty="-20" />
+            <span className="login-logo-sparkle" data-tx="-8" data-ty="-30" />
+            <span className="login-logo-sparkle" data-tx="14" data-ty="-28" />
+            <span className="login-logo-sparkle" data-tx="30" data-ty="-10" />
+            <span className="login-logo-sparkle" data-tx="28" data-ty="16" />
+            <span className="login-logo-sparkle" data-tx="8" data-ty="30" />
+            <span className="login-logo-sparkle" data-tx="-14" data-ty="28" />
+            <span className="login-logo-sparkle" data-tx="-30" data-ty="10" />
           </div>
           <span className="login-brand-name">Paliativos</span>
         </div>
@@ -409,7 +453,11 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           )}
         </label>
 
-        <button type="submit" className="login-submit" disabled={submitting}>
+        <button
+          type="submit"
+          className={`login-submit ${submitVisible ? "is-visible" : "is-hidden"}`}
+          disabled={submitting}
+        >
           {submitting ? <Loader size={16} className="login-spinner" /> : <LogIn size={16} />}
           <span>{submitting ? "Verificando..." : "Iniciar sesión"}</span>
         </button>

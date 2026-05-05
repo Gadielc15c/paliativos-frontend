@@ -122,6 +122,7 @@
 }
 
 .login-brand-mark {
+  position: relative;
   width: 34px;
   height: 34px;
   border-radius: 10px;
@@ -131,6 +132,25 @@
   color: var(--accent-foreground);
   background: var(--accent-gradient);
   box-shadow: var(--shadow-accent);
+  overflow: visible;
+}
+
+.login-logo-sparkle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  margin-top: -3.5px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, #fff 0 35%, color-mix(in srgb, var(--accent-secondary) 56%, #fff) 36% 100%);
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--accent-primary) 46%, transparent),
+    0 0 14px color-mix(in srgb, var(--accent-secondary) 38%, transparent);
 }
 
 .login-brand-name {
@@ -266,7 +286,21 @@
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.24);
   opacity: 1;
   visibility: visible;
-  transition: transform 0.14s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transform: translateY(0);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.login-submit.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.login-submit.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .login-submit:hover:not(:disabled) {
