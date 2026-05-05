@@ -2,10 +2,14 @@
 
 ## Qué cambió
 
-- UI del login simplificada: fondo sutil, tarjeta sólida, jerarquía clara de título/subtítulo y botón principal visible.
-- Inputs con estructura profesional: contenedor, icono, focus ring, placeholder y estado disabled más legible.
-- Identidad mínima: marca visual en cabecera (`HeartPulse`) sin agregar dependencias.
-- GSAP más sobrio: entrada escalonada corta, microinteracción en foco, shake al error y pulso de botón al enviar.
+- Nuevo concepto visual: “respirar con calma” con fondo cálido, ondas suaves, círculo de respiración, partículas y camino orgánico.
+- Escena narrativa: tarjetas de valores (`acompañamiento`, `dignidad`, `alivio`, `familia`, `presencia`) y trazo SVG de manos.
+- Estética premium serena: vidrio/cristal, profundidad 3D sutil en tarjeta de login y sombras suaves.
+- Estados explícitos de formulario:
+  - Banner de estado `info` durante autenticación.
+  - Banner de estado `error` con shake controlado.
+  - Error por campo con borde invalidado y mensaje inline.
+- GSAP con entrada progresiva, animaciones continuas lentas y `ScrollTrigger` para aparición de tarjetas.
 
 ## Endpoint de autenticación usado
 
