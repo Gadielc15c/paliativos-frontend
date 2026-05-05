@@ -22,6 +22,7 @@ export type ButtonStyle = "elevated" | "flat" | "glass";
 export type RadiusMode = "soft" | "round";
 export type MotionLevel = "off" | "soft" | "full";
 export type TransitionEffect = "none" | "fade";
+export type ElevationLevel = "subtle" | "balanced" | "strong";
 
 export interface UiPreferences {
   fontFamily: FontFamilyOption;
@@ -34,6 +35,10 @@ export interface UiPreferences {
   buttonStyle: ButtonStyle;
   radiusMode: RadiusMode;
   glassOpacity: number;
+  glassBlur: number;
+  backgroundIntensity: number;
+  gradientAngle: number;
+  elevationLevel: ElevationLevel;
   motionLevel: MotionLevel;
   transitionEffect: TransitionEffect;
 }
@@ -68,6 +73,10 @@ const DEFAULT_PREFERENCES: UiPreferences = {
   buttonStyle: "elevated",
   radiusMode: "soft",
   glassOpacity: 0.82,
+  glassBlur: 14,
+  backgroundIntensity: 1,
+  gradientAngle: 135,
+  elevationLevel: "balanced",
   motionLevel: "full",
   transitionEffect: "fade",
 };
@@ -84,6 +93,7 @@ const accentModeOptions = new Set<AccentMode>(["preset", "custom"]);
 const gradientModeOptions = new Set<GradientMode>(["gradient", "solid"]);
 const buttonStyleOptions = new Set<ButtonStyle>(["elevated", "flat", "glass"]);
 const radiusModeOptions = new Set<RadiusMode>(["soft", "round"]);
+const elevationLevelOptions = new Set<ElevationLevel>(["subtle", "balanced", "strong"]);
 const motionLevelOptions = new Set<MotionLevel>(["off", "soft", "full"]);
 const transitionEffectOptions = new Set<TransitionEffect>(["none", "fade"]);
 
@@ -113,6 +123,72 @@ const MOTION_FACTOR_VALUES: Record<MotionLevel, string> = {
   off: "0",
   soft: "0.7",
   full: "1",
+};
+
+const ELEVATION_SHADOWS: Record<
+  AppTheme,
+  Record<ElevationLevel, { xs: string; sm: string; md: string; lg: string }>
+> = {
+  light: {
+    subtle: {
+      xs: "0 1px 2px rgba(15, 23, 42, 0.05)",
+      sm: "0 2px 6px rgba(15, 23, 42, 0.08)",
+      md: "0 6px 18px rgba(15, 23, 42, 0.1)",
+      lg: "0 12px 28px rgba(15, 23, 42, 0.12)",
+    },
+    balanced: {
+      xs: "0 1px 3px rgba(15, 23, 42, 0.08)",
+      sm: "0 2px 8px rgba(15, 23, 42, 0.1)",
+      md: "0 8px 24px rgba(15, 23, 42, 0.12)",
+      lg: "0 16px 36px rgba(15, 23, 42, 0.14)",
+    },
+    strong: {
+      xs: "0 2px 4px rgba(15, 23, 42, 0.1)",
+      sm: "0 4px 12px rgba(15, 23, 42, 0.14)",
+      md: "0 12px 30px rgba(15, 23, 42, 0.18)",
+      lg: "0 20px 42px rgba(15, 23, 42, 0.22)",
+    },
+  },
+  dark: {
+    subtle: {
+      xs: "0 1px 2px rgba(2, 6, 16, 0.24)",
+      sm: "0 2px 6px rgba(2, 6, 16, 0.32)",
+      md: "0 6px 18px rgba(2, 6, 16, 0.4)",
+      lg: "0 12px 28px rgba(2, 6, 16, 0.46)",
+    },
+    balanced: {
+      xs: "0 1px 3px rgba(2, 6, 16, 0.34)",
+      sm: "0 2px 8px rgba(2, 6, 16, 0.42)",
+      md: "0 8px 24px rgba(2, 6, 16, 0.5)",
+      lg: "0 16px 36px rgba(2, 6, 16, 0.58)",
+    },
+    strong: {
+      xs: "0 2px 4px rgba(2, 6, 16, 0.42)",
+      sm: "0 4px 12px rgba(2, 6, 16, 0.52)",
+      md: "0 12px 30px rgba(2, 6, 16, 0.62)",
+      lg: "0 22px 42px rgba(2, 6, 16, 0.68)",
+    },
+  },
+  calm: {
+    subtle: {
+      xs: "0 1px 2px rgba(21, 32, 51, 0.05)",
+      sm: "0 2px 6px rgba(21, 32, 51, 0.08)",
+      md: "0 6px 18px rgba(21, 32, 51, 0.1)",
+      lg: "0 12px 28px rgba(21, 32, 51, 0.12)",
+    },
+    balanced: {
+      xs: "0 1px 3px rgba(21, 32, 51, 0.08)",
+      sm: "0 2px 8px rgba(21, 32, 51, 0.1)",
+      md: "0 8px 24px rgba(21, 32, 51, 0.12)",
+      lg: "0 16px 36px rgba(21, 32, 51, 0.14)",
+    },
+    strong: {
+      xs: "0 2px 4px rgba(21, 32, 51, 0.1)",
+      sm: "0 4px 12px rgba(21, 32, 51, 0.14)",
+      md: "0 12px 30px rgba(21, 32, 51, 0.18)",
+      lg: "0 20px 42px rgba(21, 32, 51, 0.22)",
+    },
+  },
 };
 
 const isHexColor = (value: string) => /^#([0-9a-fA-F]{6})$/.test(value);
@@ -175,6 +251,21 @@ const validatePreferences = (value: unknown): UiPreferences => {
       typeof candidate.glassOpacity === "number"
         ? clamp(candidate.glassOpacity, 0.55, 1)
         : DEFAULT_PREFERENCES.glassOpacity,
+    glassBlur:
+      typeof candidate.glassBlur === "number"
+        ? clamp(Math.round(candidate.glassBlur), 0, 24)
+        : DEFAULT_PREFERENCES.glassBlur,
+    backgroundIntensity:
+      typeof candidate.backgroundIntensity === "number"
+        ? clamp(candidate.backgroundIntensity, 0, 1.6)
+        : DEFAULT_PREFERENCES.backgroundIntensity,
+    gradientAngle:
+      typeof candidate.gradientAngle === "number"
+        ? clamp(Math.round(candidate.gradientAngle), 0, 360)
+        : DEFAULT_PREFERENCES.gradientAngle,
+    elevationLevel: elevationLevelOptions.has(candidate.elevationLevel as ElevationLevel)
+      ? (candidate.elevationLevel as ElevationLevel)
+      : DEFAULT_PREFERENCES.elevationLevel,
     motionLevel: motionLevelOptions.has(candidate.motionLevel as MotionLevel)
       ? (candidate.motionLevel as MotionLevel)
       : DEFAULT_PREFERENCES.motionLevel,
@@ -228,7 +319,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const accentGradient =
       preferences.gradientMode === "solid"
         ? accent.accent
-        : `linear-gradient(135deg, ${accent.accent}, ${accent.secondary})`;
+        : `linear-gradient(${preferences.gradientAngle}deg, ${accent.accent}, ${accent.secondary})`;
+    const elevation = ELEVATION_SHADOWS[theme][preferences.elevationLevel];
 
     root.setAttribute("data-theme", theme);
     root.setAttribute("data-font-family", preferences.fontFamily);
@@ -236,6 +328,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.setAttribute("data-button-style", preferences.buttonStyle);
     root.setAttribute("data-radius-mode", preferences.radiusMode);
     root.setAttribute("data-gradient-mode", preferences.gradientMode);
+    root.setAttribute("data-elevation-level", preferences.elevationLevel);
     root.setAttribute("data-motion", preferences.motionLevel);
 
     root.style.setProperty("--font-sans", FONT_FAMILY_VALUES[preferences.fontFamily]);
@@ -250,6 +343,20 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.style.setProperty("--accent-shadow", toRgba(accent.accent, 0.28));
     root.style.setProperty("--accent-shadow-strong", toRgba(accent.accent, 0.38));
     root.style.setProperty("--ui-glass-opacity", String(preferences.glassOpacity));
+    root.style.setProperty("--ui-glass-blur", `${preferences.glassBlur}px`);
+    root.style.setProperty(
+      "--ui-bg-intensity",
+      String(preferences.backgroundIntensity)
+    );
+    root.style.setProperty("--shadow-xs", elevation.xs);
+    root.style.setProperty("--shadow-sm", elevation.sm);
+    root.style.setProperty("--shadow-md", elevation.md);
+    root.style.setProperty("--shadow-lg", elevation.lg);
+    root.style.setProperty("--shadow-accent", `0 8px 24px ${toRgba(accent.accent, 0.28)}`);
+    root.style.setProperty(
+      "--shadow-accent-lg",
+      `0 16px 36px ${toRgba(accent.accent, 0.38)}`
+    );
     root.style.setProperty("--motion-factor", MOTION_FACTOR_VALUES[preferences.motionLevel]);
     root.style.setProperty(
       "--theme-transition-ms",

@@ -24,6 +24,8 @@
   --button-primary-shadow-hover: var(--shadow-accent-lg);
   --button-primary-filter-hover: saturate(1.06);
   --ui-glass-opacity: 0.82;
+  --ui-glass-blur: 14px;
+  --ui-bg-intensity: 1;
 
   /* Semantic */
   --state-success: #1a7f37;

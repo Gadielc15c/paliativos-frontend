@@ -12,6 +12,7 @@ export default function AppLayout() {
   const { sidebarCollapsed, sidebarMobileOpen, closeSidebarMobile } = useAppStore();
   const location = useLocation();
   const centerPanelRef = useRef<HTMLDivElement | null>(null);
+  const showContextualPanel = location.pathname !== "/config";
 
   useLayoutEffect(() => {
     const centerPanel = centerPanelRef.current;
@@ -95,7 +96,7 @@ export default function AppLayout() {
           <div className="app-layout-center-panel" ref={centerPanelRef}>
             <Outlet />
           </div>
-          <ContextualPanel />
+          {showContextualPanel && <ContextualPanel />}
         </div>
       </div>
     </div>

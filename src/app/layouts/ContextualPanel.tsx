@@ -11,6 +11,7 @@ const routeTitles: Record<string, string> = {
   "/reports": "Reportes",
   "/audit": "Auditoría",
   "/secretaries": "Secretarias",
+  "/config": "Configuración visual",
 };
 
 export default function ContextualPanel() {

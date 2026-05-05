@@ -8,6 +8,7 @@ import DocumentsPage from "../../modules/documents/pages";
 import ReportsPage from "../../modules/reports/pages";
 import AuditPage from "../../modules/audit/pages";
 import SecretariesPage from "../../modules/secretaries/pages";
+import ConfigPage from "../../modules/config/pages";
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +50,10 @@ export const router = createBrowserRouter([
       {
         path: "secretaries",
         element: <SecretariesPage />,
+      },
+      {
+        path: "config",
+        element: <ConfigPage />,
       },
     ],
   },
