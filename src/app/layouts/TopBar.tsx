@@ -1,11 +1,9 @@
 import { useAppStore } from "../store/useAppStore";
-import { User, LogOut, Menu, SunMedium, Moon, Waves } from "lucide-react";
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { AppTheme, useTheme } from "../providers/ThemeProvider";
+import { User, LogOut, Menu } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export default function TopBar() {
   const { user, toggleSidebarMobile } = useAppStore();
-  const { theme, setTheme } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement | null>(null);
   const roleLabel =
@@ -32,32 +30,6 @@ export default function TopBar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const themeOptions: Array<{
-    id: AppTheme;
-    label: string;
-    description: string;
-    icon: ReactNode;
-  }> = [
-    {
-      id: "light",
-      label: "Claro",
-      description: "Interfaz limpia",
-      icon: <SunMedium size={14} />,
-    },
-    {
-      id: "dark",
-      label: "Oscuro",
-      description: "Menor fatiga visual",
-      icon: <Moon size={14} />,
-    },
-    {
-      id: "calm",
-      label: "Calma",
-      description: "Tonos suaves clínicos",
-      icon: <Waves size={14} />,
-    },
-  ];
 
   return (
     <header className="top-bar">
@@ -87,38 +59,14 @@ export default function TopBar() {
           >
             <User size={18} />
           </button>
-          {showMenu && (
-            <div className="top-bar-dropdown">
-              <button type="button" className="top-bar-dropdown-item">
-                <User size={16} /> Mi sesión
-              </button>
+	          {showMenu && (
+	            <div className="top-bar-dropdown">
+	              <button type="button" className="top-bar-dropdown-item">
+	                <User size={16} /> Mi sesión
+	              </button>
 
-              <div className="top-bar-dropdown-theme">
-                <span className="top-bar-dropdown-theme-label">Tema</span>
-                <div className="top-bar-theme-options">
-                  {themeOptions.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      className={`top-bar-theme-option ${
-                        theme === option.id ? "active" : ""
-                      }`}
-                      onClick={() => setTheme(option.id)}
-                    >
-                      <span className="top-bar-theme-option-icon">{option.icon}</span>
-                      <span className="top-bar-theme-option-copy">
-                        <span className="top-bar-theme-option-title">{option.label}</span>
-                        <span className="top-bar-theme-option-description">
-                          {option.description}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button type="button" className="top-bar-dropdown-item logout">
-                <LogOut size={16} /> Cerrar sesión
+	              <button type="button" className="top-bar-dropdown-item logout">
+	                <LogOut size={16} /> Cerrar sesión
               </button>
             </div>
           )}

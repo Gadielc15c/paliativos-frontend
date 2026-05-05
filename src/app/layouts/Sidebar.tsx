@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { AppTheme, useTheme } from "../providers/ThemeProvider";
 import {
   Users,
   FileText,
@@ -12,6 +13,9 @@ import {
   UserSquare2,
   Settings,
   Menu,
+  SunMedium,
+  Moon,
+  Waves,
 } from "lucide-react";
 
 interface NavItem {
@@ -35,11 +39,21 @@ const navItems: NavItem[] = [
 export default function Sidebar() {
   const { sidebarCollapsed, sidebarMobileOpen, toggleSidebar, toggleSidebarMobile, closeSidebarMobile } =
     useAppStore();
-  const [showBackendInfo, setShowBackendInfo] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [showSystemMenu, setShowSystemMenu] = useState(false);
 
   const isMobileViewport =
     typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
   const showLabels = !sidebarCollapsed || sidebarMobileOpen;
+  const themeOptions: Array<{
+    id: AppTheme;
+    label: string;
+    icon: ReactNode;
+  }> = [
+    { id: "light", label: "Tema claro", icon: <SunMedium size={15} /> },
+    { id: "dark", label: "Tema oscuro", icon: <Moon size={15} /> },
+    { id: "calm", label: "Tema calma", icon: <Waves size={15} /> },
+  ];
 
   const handleToggle = () => {
     if (isMobileViewport) {
@@ -93,19 +107,31 @@ export default function Sidebar() {
       <div className="sidebar-footer">
         <button
           className="sidebar-role-button"
-          onClick={() => setShowBackendInfo(!showBackendInfo)}
-          title="Backend session info"
+          onClick={() => setShowSystemMenu(!showSystemMenu)}
+          title="Configuración del sistema"
         >
           <Settings size={18} />
         </button>
-        {showBackendInfo && showLabels && (
-          <div className="sidebar-role-menu">
-            <button type="button" disabled>
-              Backend live
-            </button>
-            <button type="button" disabled>
-              Auth seeded
-            </button>
+        {showSystemMenu && (
+          <div
+            className={`sidebar-role-menu ${
+              !showLabels ? "sidebar-role-menu-floating" : ""
+            }`}
+          >
+            <div className="sidebar-role-menu-title">Configuración</div>
+            <div className="sidebar-theme-options">
+              {themeOptions.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={`sidebar-theme-option ${theme === option.id ? "active" : ""}`}
+                  onClick={() => setTheme(option.id)}
+                >
+                  <span className="sidebar-theme-option-icon">{option.icon}</span>
+                  {showLabels ? option.label : option.id}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>

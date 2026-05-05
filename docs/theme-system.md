@@ -4,7 +4,7 @@
 
 - Proveedor real de tema con persistencia en `localStorage` (`app_theme`).
 - Atributo `data-theme` aplicado en `document.documentElement`.
-- Selector de tema en menú de usuario (`TopBar`): `Claro`, `Oscuro`, `Calma`.
+- Selector de tema en engrane de configuración del `Sidebar`: `Claro`, `Oscuro`, `Calma`.
 - Tokens centralizados en `src/styles/tokens.css` con compatibilidad hacia variables legacy.
 
 ## Archivos clave
