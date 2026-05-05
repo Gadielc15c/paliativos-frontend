@@ -4,9 +4,6 @@ import type { AuthTokenResponse, CurrentUserResponse } from "../types/api";
 
 const ACCESS_TOKEN_KEY = "auth_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
-const DEV_EMAIL = import.meta.env.VITE_DEV_EMAIL || "admin@example.com";
-const DEV_PASSWORD = import.meta.env.VITE_DEV_PASSWORD || "change-me-too";
-const DEV_AUTO_LOGIN = import.meta.env.VITE_DEV_AUTO_LOGIN !== "false";
 
 const PERMISSIONS_BY_ROLE: Record<User["role"], Permission[]> = {
   admin: [
@@ -78,9 +75,7 @@ export const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
 export const getPermissionsForRole = (role: User["role"]): Permission[] =>
   PERMISSIONS_BY_ROLE[role] || [];
 
-export const login = async (
-  payload: LoginPayload = { email: DEV_EMAIL, password: DEV_PASSWORD }
-) => {
+export const login = async (payload: LoginPayload) => {
   const response = await httpClient.post<AuthTokenResponse>("/auth/login", payload);
   persistTokens(response.data);
   return response.data;
@@ -127,18 +122,11 @@ const tryRestoreSession = async () => {
   }
 };
 
-export const bootstrapSession = async (): Promise<AuthSession> => {
-  let currentUser = await tryRestoreSession();
-
+export const restoreSession = async (): Promise<AuthSession | null> => {
+  const currentUser = await tryRestoreSession();
   if (!currentUser) {
-    if (!DEV_AUTO_LOGIN) {
-      throw new Error("Session missing and auto-login disabled.");
-    }
-
-    await login();
-    currentUser = await getCurrentUser();
+    return null;
   }
-
   return {
     user: toAppUser(currentUser),
     permissions: getPermissionsForRole(currentUser.role),
