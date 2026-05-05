@@ -1,0 +1,114 @@
+import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { useAppStore } from "../store/useAppStore";
+import {
+  Users,
+  FileText,
+  DollarSign,
+  TrendingUp,
+  Folder,
+  BarChart3,
+  Eye,
+  UserSquare2,
+  Settings,
+  Menu,
+} from "lucide-react";
+
+interface NavItem {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+  tooltip: string;
+}
+
+const navItems: NavItem[] = [
+  { label: "PACIENTES", path: "/patients", icon: <Users size={20} />, tooltip: "Ver pacientes" },
+  { label: "EPISODIOS", path: "/episodes", icon: <FileText size={20} />, tooltip: "Eventos clínicos" },
+  { label: "FACTURACIÓN", path: "/billing", icon: <DollarSign size={20} />, tooltip: "Facturas emitidas" },
+  { label: "MOVIMIENTOS", path: "/finance", icon: <TrendingUp size={20} />, tooltip: "Entradas y salidas" },
+  { label: "DOCUMENTOS", path: "/documents", icon: <Folder size={20} />, tooltip: "Registro documental" },
+  { label: "REPORTES", path: "/reports", icon: <BarChart3 size={20} />, tooltip: "Cortes y agregados" },
+  { label: "TRAZAS", path: "/audit", icon: <Eye size={20} />, tooltip: "Historial de acciones" },
+  { label: "SECRETARIAS", path: "/secretaries", icon: <UserSquare2 size={20} />, tooltip: "Asignaciones por médico" },
+];
+
+export default function Sidebar() {
+  const { sidebarCollapsed, sidebarMobileOpen, toggleSidebar, toggleSidebarMobile, closeSidebarMobile } =
+    useAppStore();
+  const [showBackendInfo, setShowBackendInfo] = useState(false);
+
+  const isMobileViewport =
+    typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+  const showLabels = !sidebarCollapsed || sidebarMobileOpen;
+
+  const handleToggle = () => {
+    if (isMobileViewport) {
+      toggleSidebarMobile();
+      return;
+    }
+    toggleSidebar();
+  };
+
+  return (
+    <aside
+      className={`sidebar ${sidebarCollapsed ? "collapsed" : ""} ${
+        sidebarMobileOpen ? "mobile-open" : ""
+      }`}
+    >
+      <div className="sidebar-header">
+        <button
+          className="sidebar-toggle-btn"
+          onClick={handleToggle}
+          title="Toggle sidebar"
+        >
+          <Menu size={20} />
+        </button>
+      </div>
+
+      <nav className="sidebar-nav">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `sidebar-nav-item ${isActive ? "active" : ""}`
+            }
+            title={item.tooltip}
+            onClick={() => {
+              if (isMobileViewport) {
+                closeSidebarMobile();
+              }
+            }}
+          >
+            <span className="sidebar-nav-item-icon">{item.icon}</span>
+            {showLabels && (
+              <>
+                <span className="sidebar-nav-item-label">{item.label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="sidebar-footer">
+        <button
+          className="sidebar-role-button"
+          onClick={() => setShowBackendInfo(!showBackendInfo)}
+          title="Backend session info"
+        >
+          <Settings size={18} />
+        </button>
+        {showBackendInfo && showLabels && (
+          <div className="sidebar-role-menu">
+            <button type="button" disabled>
+              Backend live
+            </button>
+            <button type="button" disabled>
+              Auth seeded
+            </button>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}

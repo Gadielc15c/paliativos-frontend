@@ -1,0 +1,129 @@
+/* Patient List - 30% left column - RESPONSIVE */
+
+.patient-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg-main);
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.patient-list-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .patient-list-header {
+    padding: var(--space-3);
+  }
+}
+
+.patient-list-header h2 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+  .patient-list-header h2 {
+    font-size: var(--text-base);
+  }
+}
+
+.patient-list-items {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.patient-list-item {
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: var(--space-3);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid var(--border-subtle);
+  display: grid;
+  gap: var(--space-1);
+  animation: slideInLeft 0.3s ease-out backwards;
+}
+
+.patient-list-item:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.patient-list-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.patient-list-item:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.patient-list-item:nth-child(n + 4) {
+  animation-delay: 0.2s;
+}
+
+.patient-list-item:hover {
+  border-left-color: var(--accent-primary);
+  background-color: var(--bg-elevated);
+}
+
+.patient-list-item.selected {
+  border-left-color: var(--accent-primary);
+  background-color: var(--bg-elevated);
+  box-shadow: inset 0 0 8px rgba(9, 105, 218, 0.1);
+}
+
+.patient-list-item-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 480px) {
+  .patient-list-item-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.patient-list-item-row .label {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: var(--font-semibold);
+}
+
+.patient-list-item-row .value {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.patient-list-item-row.name {
+  grid-template-columns: 1fr;
+}
+
+.patient-list-item-row.name .value {
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+}
+
+.patient-list-item-row.doc .value {
+  font-family: var(--font-mono);
+}

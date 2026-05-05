@@ -1,0 +1,80 @@
+.billing-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  min-height: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.billing-list-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg-main);
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.billing-filter-banner {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-xs);
+  color: var(--accent-primary);
+  background: rgba(9, 105, 218, 0.08);
+}
+
+.billing-detail-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--bg-main);
+  padding: var(--space-4);
+  overflow-y: auto;
+  animation: slideInRight 0.4s ease-out;
+  border-left: 1px solid var(--border-subtle);
+}
+
+/* Tablet: Stack layout */
+@media (max-width: 1024px) {
+  .billing-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    overflow: visible;
+  }
+
+  .billing-list-column {
+    border-right: none;
+    max-height: 42vh;
+    min-height: 260px;
+  }
+
+  .billing-detail-column {
+    border-left: none;
+    border-top: 1px solid var(--border-subtle);
+    min-height: 320px;
+  }
+}
+
+/* Mobile: Full stack */
+@media (max-width: 768px) {
+  .billing-page {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .billing-list-column {
+    max-height: 36vh;
+    min-height: 240px;
+  }
+
+  .billing-detail-column {
+    min-height: 300px;
+    padding: var(--space-3);
+    overflow-y: auto;
+  }
+}

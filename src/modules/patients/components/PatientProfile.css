@@ -1,0 +1,303 @@
+.patient-profile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-height: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.patient-profile-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at top right, rgba(9, 105, 218, 0.12), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 250, 0.92));
+}
+
+.patient-profile-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.patient-profile-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.patient-profile-kicker {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.patient-profile-name {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.patient-profile-header-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.patient-profile-header-meta span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border-subtle);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.patient-profile-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-self: flex-start;
+}
+
+.patient-profile-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.patient-profile-metric-card,
+.patient-profile-financial-card,
+.patient-profile-info-card,
+.patient-profile-panel,
+.patient-profile-empty-panel,
+.patient-profile-notes {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-main);
+}
+
+.patient-profile-metric-card,
+.patient-profile-financial-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.patient-profile-metric-card span,
+.patient-profile-financial-card span {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.patient-profile-metric-card strong,
+.patient-profile-financial-card strong {
+  font-size: var(--text-xl);
+}
+
+.patient-profile-metric-card.warning strong,
+.patient-profile-financial-card.warning strong {
+  color: var(--accent-warning);
+}
+
+.patient-profile-metric-card.success strong,
+.patient-profile-financial-card.success strong {
+  color: var(--accent-success);
+}
+
+.patient-profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.patient-profile-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.patient-profile-section-head h3 {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.patient-profile-section-head span {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.patient-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.patient-profile-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-4);
+}
+
+.patient-profile-info-card .label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.patient-profile-info-card strong {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.patient-profile-info-card strong.mono {
+  font-family: var(--font-mono);
+}
+
+.patient-profile-info-card .auxiliary {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.patient-profile-condition-groups,
+.patient-profile-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.patient-profile-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  min-width: 0;
+}
+
+.patient-profile-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.patient-profile-chip-list,
+.patient-profile-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.patient-profile-chip,
+.patient-profile-activity-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  min-width: 0;
+}
+
+.patient-profile-chip-main,
+.patient-profile-activity-item {
+  justify-content: space-between;
+}
+
+.patient-profile-chip-badges,
+.patient-profile-activity-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.patient-profile-chip-meta,
+.patient-profile-activity-copy span,
+.patient-profile-activity-copy small {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.patient-profile-activity-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.patient-profile-financial-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.patient-profile-empty-panel,
+.patient-profile-notes {
+  padding: var(--space-4);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1200px) {
+  .patient-profile-stat-grid,
+  .patient-profile-grid,
+  .patient-profile-condition-groups,
+  .patient-profile-activity-grid,
+  .patient-profile-financial-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-profile {
+    gap: var(--space-4);
+  }
+
+  .patient-profile-hero,
+  .patient-profile-panel,
+  .patient-profile-info-card,
+  .patient-profile-metric-card,
+  .patient-profile-financial-card,
+  .patient-profile-empty-panel,
+  .patient-profile-notes {
+    padding: var(--space-3);
+  }
+
+  .patient-profile-header,
+  .patient-profile-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .patient-profile-stat-grid,
+  .patient-profile-grid,
+  .patient-profile-condition-groups,
+  .patient-profile-activity-grid,
+  .patient-profile-financial-grid {
+    grid-template-columns: 1fr;
+  }
+}

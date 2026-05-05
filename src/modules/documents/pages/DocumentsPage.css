@@ -1,0 +1,202 @@
+.documents-page-simple {
+  animation: fadeInUp 0.3s ease-out;
+  gap: var(--space-3);
+}
+
+.docs-header-compact {
+  padding: var(--space-3);
+  background: var(--bg-elevated);
+}
+
+.docs-main-grid {
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.docs-simple-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.documents-page-simple .data-card-header {
+  padding: var(--space-3);
+}
+
+.documents-page-simple .data-card-body {
+  padding: var(--space-3);
+}
+
+.docs-hidden-file-input {
+  display: none;
+}
+
+.docs-dropzone {
+  width: 100%;
+  min-height: 108px;
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.docs-dropzone strong {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+}
+
+.docs-dropzone span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.docs-dropzone:hover,
+.docs-dropzone.active {
+  border-color: var(--accent-primary);
+  background-color: rgba(9, 105, 218, 0.06);
+}
+
+.docs-dropzone.error {
+  border-color: var(--state-error);
+}
+
+.docs-simple-file-meta {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.docs-simple-label {
+  display: block;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.docs-simple-textarea {
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  resize: vertical;
+}
+
+.docs-simple-textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.1);
+}
+
+.docs-simple-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.docs-simple-patient-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.docs-simple-muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.docs-simple-patient {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-main);
+  color: var(--text-primary);
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  text-align: left;
+  cursor: pointer;
+}
+
+.docs-simple-patient:hover {
+  border-color: var(--accent-primary);
+}
+
+.docs-simple-patient.selected {
+  border-color: var(--accent-primary);
+  background: rgba(9, 105, 218, 0.08);
+}
+
+.docs-simple-patient span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.docs-simple-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.docs-simple-feedback {
+  margin: 0;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.docs-simple-feedback.success {
+  border: 1px solid rgba(46, 160, 67, 0.35);
+  background: rgba(46, 160, 67, 0.09);
+  color: var(--state-success);
+}
+
+.docs-simple-feedback.error {
+  border: 1px solid rgba(207, 34, 46, 0.35);
+  background: rgba(207, 34, 46, 0.08);
+  color: var(--state-error);
+}
+
+.docs-simple-waiting {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 105, 218, 0.08);
+  padding: var(--space-2) var(--space-3);
+}
+
+.docs-simple-waiting-text {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.docs-simple-waiting-dots {
+  font-weight: 700;
+  color: var(--accent-primary);
+  min-width: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .docs-main-grid {
+    grid-template-columns: 1fr;
+  }
+}

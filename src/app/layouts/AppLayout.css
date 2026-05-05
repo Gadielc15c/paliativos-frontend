@@ -1,0 +1,45 @@
+/* 3-column layout: sidebar | content | contextual panel */
+.app-layout-container {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  grid-template-rows: 1fr;
+  height: 100vh;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.app-layout-main-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-layout-content-area {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.app-layout-center-panel {
+  overflow-y: auto;
+  padding: var(--space-6);
+  background-color: var(--bg-main);
+}
+
+/* Sidebar collapse state */
+.app-layout-container.sidebarCollapsed {
+  grid-template-columns: 60px 1fr;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .app-layout-container {
+    grid-template-columns: 1fr;
+  }
+
+  .app-layout-content-area {
+    grid-template-columns: 1fr;
+  }
+}
