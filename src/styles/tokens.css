@@ -1,10 +1,12 @@
 :root {
   color-scheme: light;
+  --font-scale: 1;
 
   /* Minimalist Modern Core */
   --background: #fafafa;
   --foreground: #0f172a;
   --surface: #ffffff;
+  --surface-rgb: 255, 255, 255;
   --surface-muted: #f1f5f9;
   --muted-foreground: #64748b;
   --border: #e2e8f0;
@@ -16,6 +18,12 @@
   --accent-soft: rgba(0, 82, 255, 0.1);
   --accent-shadow: rgba(0, 82, 255, 0.28);
   --accent-shadow-strong: rgba(0, 82, 255, 0.38);
+  --button-primary-bg: var(--accent-gradient);
+  --button-primary-border: color-mix(in srgb, var(--foreground) 14%, transparent);
+  --button-primary-shadow: var(--shadow-accent);
+  --button-primary-shadow-hover: var(--shadow-accent-lg);
+  --button-primary-filter-hover: saturate(1.06);
+  --ui-glass-opacity: 0.82;
 
   /* Semantic */
   --state-success: #1a7f37;
@@ -101,11 +109,37 @@
   --bp-wide: 1440px;
 }
 
+:root[data-radius-mode="round"] {
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+}
+
+:root[data-button-style="flat"] {
+  --button-primary-shadow: none;
+  --button-primary-shadow-hover: none;
+  --button-primary-border: transparent;
+  --button-primary-filter-hover: brightness(1.04);
+}
+
+:root[data-button-style="glass"] {
+  --button-primary-bg: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 76%, white) 0%,
+    color-mix(in srgb, var(--accent-secondary) 68%, white) 100%
+  );
+  --button-primary-border: color-mix(in srgb, var(--surface) 62%, transparent);
+  --button-primary-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 26%, transparent);
+  --button-primary-shadow-hover: 0 16px 32px color-mix(in srgb, var(--accent) 34%, transparent);
+  --button-primary-filter-hover: saturate(1.03);
+}
+
 :root[data-theme="dark"] {
   color-scheme: dark;
   --background: #0b1220;
   --foreground: #e8eef8;
   --surface: #111b2d;
+  --surface-rgb: 17, 27, 45;
   --surface-muted: #0f1728;
   --muted-foreground: #9bb0c7;
   --border: #1f3047;
@@ -131,6 +165,7 @@
   --background: #f7f8f4;
   --foreground: #152033;
   --surface: #ffffff;
+  --surface-rgb: 255, 255, 255;
   --surface-muted: #edf2ee;
   --muted-foreground: #5c6f6a;
   --border: #d7e2db;

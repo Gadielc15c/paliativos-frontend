@@ -1,6 +1,6 @@
 /* Global Styles & Resets */
 
-@import url("https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Calistoga&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @import "./tokens.css";
 @import "./animations.css";
@@ -13,7 +13,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   scroll-behavior: smooth;
   background-color: var(--bg-main);
 }
@@ -25,7 +25,9 @@ body {
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.24s ease, color 0.24s ease;
+  transition:
+    background-color var(--theme-transition-ms, 0ms) ease,
+    color var(--theme-transition-ms, 0ms) ease;
 }
 
 /* Headings */
@@ -140,6 +142,23 @@ select:focus {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+:root.theme-fade-transition *,
+:root.theme-fade-transition *::before,
+:root.theme-fade-transition *::after {
+  transition-property: background-color, color, border-color, box-shadow, fill, stroke;
+  transition-duration: var(--theme-transition-ms, 0ms);
+  transition-timing-function: ease;
+}
+
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

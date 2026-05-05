@@ -16,7 +16,7 @@ export default function BillingPage() {
     isLoading: invoicesLoading,
     isError: invoicesError,
     refetch: refetchInvoices,
-  } = useBillingQuery(1, 50);
+  } = useBillingQuery(1, 50, patientIdFilter);
 
   // Fetch selected invoice detail
   const {

@@ -10,3 +10,9 @@ export { auditEndpoints } from "./audit";
 export { secretariesEndpoints } from "./secretaries";
 export { documentTypesEndpoints } from "./documentTypes";
 export { patientConditionsEndpoints } from "./patientConditions";
+export { systemEndpoints } from "./system";
+export {
+  consultationsEndpoints,
+  diagnosticsEndpoints,
+  prescriptionsEndpoints,
+} from "./clinical";

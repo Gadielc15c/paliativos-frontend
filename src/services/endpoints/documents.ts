@@ -24,9 +24,23 @@ export const documentsEndpoints = {
     return response.data;
   },
 
-  get: async (id: string) => {
-    const response = await httpClient.get<DocumentRecord>(`/documents/${id}`);
-    return response.data;
+  getMeta: async (id: string) => {
+    const response = await httpClient.get<DocumentRecord | { document: DocumentRecord }>(
+      `/documents/${id}/meta`
+    );
+    const payload = response.data as DocumentRecord | { document: DocumentRecord };
+    return "document" in payload ? payload.document : payload;
+  },
+
+  getBinary: async (id: string) => {
+    const response = await httpClient.get<Blob>(`/documents/${id}`, {
+      responseType: "blob",
+    });
+    return {
+      blob: response.data,
+      contentType: response.headers["content-type"] || "application/octet-stream",
+      contentDisposition: response.headers["content-disposition"] || null,
+    };
   },
 
   create: async (

@@ -17,15 +17,16 @@ const createNameLookup = (items: { id: string; full_name: string }[]) =>
 
 export function useBillingQuery(
   page: number = 1,
-  limit: number = 50
+  limit: number = 50,
+  patientId?: string | null
 ): UseQueryResult<InvoiceContract[], ApiError> {
   return useQuery({
-    queryKey: ["billing-invoices", page, limit],
+    queryKey: ["billing-invoices", page, limit, patientId],
     queryFn: async () => {
       try {
         const [invoicesPage, paymentsPage, patientsPage, doctorsPage] =
           await Promise.all([
-            billingEndpoints.listInvoices(page, limit),
+            billingEndpoints.listInvoices(page, limit, patientId || undefined),
             financeEndpoints.listPayments(1, 100),
             patientsEndpoints.list(1, 100),
             doctorsEndpoints.list(1, 100, true),

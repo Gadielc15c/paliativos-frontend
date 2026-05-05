@@ -7,9 +7,9 @@ import type {
 } from "../../types/api";
 
 export const billingEndpoints = {
-  listInvoices: async (page = 1, pageSize = 50) => {
+  listInvoices: async (page = 1, pageSize = 50, patientId?: string) => {
     const response = await httpClient.get<PageResponse<InvoiceRecord>>("/invoices", {
-      params: { page, page_size: pageSize },
+      params: { page, page_size: pageSize, patient_id: patientId || undefined },
     });
     return response.data;
   },
@@ -24,9 +24,17 @@ export const billingEndpoints = {
       patient_id: string;
       episode_id?: string | null;
       issue_date?: string;
+      date?: string;
       insurer_name?: string | null;
       discounts?: number;
       notes?: string | null;
+      items?: Array<{
+        description: string;
+        quantity: number;
+        unit_price: number;
+        insurer_covered_amount?: number;
+        patient_amount?: number;
+      }>;
     }
   ) => {
     const response = await httpClient.post<InvoiceRecord>("/invoices", data);

@@ -165,7 +165,7 @@ export default function DocumentsPage() {
     const timeoutMs = 90000;
     let intervalMs = 1500;
     while (Date.now() - startedAt < timeoutMs) {
-      const current = await documentsEndpoints.get(documentId);
+      const current = await documentsEndpoints.getMeta(documentId);
       const trace = (current.metadata?.llm_patient_extraction || {}) as Record<string, unknown>;
       const status = String(trace.status || "");
       const linkedPatientId = current.patient_id || current.matched_patient_id || null;

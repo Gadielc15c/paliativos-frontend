@@ -21,14 +21,15 @@
 
 /* Variants */
 .button-primary {
-  background-color: var(--accent-primary);
+  background: var(--button-primary-bg);
   color: white;
-  border-color: var(--accent-primary);
+  border-color: var(--button-primary-border);
+  box-shadow: var(--button-primary-shadow);
 }
 
 .button-primary:hover:not(:disabled) {
-  background-color: #0860ca;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--button-primary-shadow-hover);
+  filter: var(--button-primary-filter-hover);
 }
 
 .button-secondary {

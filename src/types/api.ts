@@ -175,8 +175,54 @@ export interface DocumentRecord {
   storage_bucket: string | null;
   storage_object_key: string | null;
   storage_etag: string | null;
+  minio_path?: string | null;
   metadata: Record<string, unknown> | null;
   created_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SystemServiceStatus {
+  status: "ok" | "degraded" | "down" | "unknown";
+  message?: string | null;
+  details?: Record<string, unknown> | null;
+}
+
+export interface SystemStatusResponse {
+  backend: SystemServiceStatus | string;
+  database: SystemServiceStatus | string;
+  minio: SystemServiceStatus | string;
+  llm: SystemServiceStatus | string;
+}
+
+export interface ConsultationRecord {
+  id: string;
+  patient_id: string;
+  date: string;
+  reason: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DiagnosticRecord {
+  id: string;
+  patient_id: string;
+  date: string;
+  diagnosis: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PrescriptionRecord {
+  id: string;
+  patient_id: string;
+  date: string;
+  medication: string;
+  dosage: string | null;
+  instructions: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }

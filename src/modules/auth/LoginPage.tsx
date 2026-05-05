@@ -78,24 +78,31 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
     const prefersReducedMotion = globalThis.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
+    const motionLevel =
+      document.documentElement.getAttribute("data-motion") || "full";
+    const motionFactor = motionLevel === "soft" ? 0.72 : motionLevel === "off" ? 0 : 1;
     if (prefersReducedMotion) {
       return;
     }
+    if (motionFactor === 0) {
+      return;
+    }
+    const t = (duration: number) => duration * motionFactor;
 
     const ctx = gsap.context(() => {
       const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
       intro
-        .from(".login-card", { y: 20, opacity: 0, duration: 0.58 }, 0)
-        .from(".login-brand", { y: 10, opacity: 0, duration: 0.35 }, 0.1)
-        .from(".login-title", { y: 12, opacity: 0, duration: 0.35 }, 0.14)
-        .from(".login-subtitle", { y: 8, opacity: 0, duration: 0.3 }, 0.18)
-        .from(".login-field", { y: 8, opacity: 0, duration: 0.3, stagger: 0.06 }, 0.2)
-        .from(".login-submit", { y: 8, opacity: 0, duration: 0.28 }, 0.34);
+        .from(".login-card", { y: 20, opacity: 0, duration: t(0.58) }, 0)
+        .from(".login-brand", { y: 10, opacity: 0, duration: t(0.35) }, 0.1)
+        .from(".login-title", { y: 12, opacity: 0, duration: t(0.35) }, 0.14)
+        .from(".login-subtitle", { y: 8, opacity: 0, duration: t(0.3) }, 0.18)
+        .from(".login-field", { y: 8, opacity: 0, duration: t(0.3), stagger: t(0.06) }, 0.2)
+        .from(".login-submit", { y: 8, opacity: 0, duration: t(0.28) }, 0.34);
 
       gsap.to(".breath-circle", {
         scale: 1.2,
         opacity: 0.55,
-        duration: 3.2,
+        duration: t(3.2),
         repeat: -1,
         yoyo: true,
         ease: "sine.inOut",
@@ -104,7 +111,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       gsap.to(".ambient-a", {
         xPercent: -8,
         yPercent: 4,
-        duration: 10,
+        duration: t(10),
         repeat: -1,
         yoyo: true,
         ease: "sine.inOut",
@@ -112,7 +119,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       gsap.to(".ambient-b", {
         xPercent: 7,
         yPercent: -4,
-        duration: 12,
+        duration: t(12),
         repeat: -1,
         yoyo: true,
         ease: "sine.inOut",
@@ -121,7 +128,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
         xPercent: -5,
         yPercent: -6,
         scale: 1.12,
-        duration: 13.5,
+        duration: t(13.5),
         repeat: -1,
         yoyo: true,
         ease: "sine.inOut",
@@ -134,7 +141,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           x: index % 3 === 0 ? 8 : -6,
           opacity: 0.62,
           scale: 1.18,
-          duration: 3.6 + index * 0.25,
+          duration: t(3.6 + index * 0.25),
           delay: Number(particle.dataset.delay || 0),
           repeat: -1,
           yoyo: true,
@@ -154,8 +161,8 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           return;
         }
         const onFocus = () =>
-          gsap.to(field, { y: -1, duration: 0.16, ease: "power2.out" });
-        const onBlur = () => gsap.to(field, { y: 0, duration: 0.16, ease: "power2.out" });
+          gsap.to(field, { y: -1, duration: t(0.16), ease: "power2.out" });
+        const onBlur = () => gsap.to(field, { y: 0, duration: t(0.16), ease: "power2.out" });
         input.addEventListener("focus", onFocus);
         input.addEventListener("blur", onBlur);
         listeners.push({ input, onFocus, onBlur });
@@ -176,7 +183,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
             rotateX: -offsetY * 4.8,
             transformPerspective: 900,
             transformOrigin: "50% 50%",
-            duration: 0.3,
+            duration: t(0.3),
             ease: "power2.out",
           });
         };
@@ -185,7 +192,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           gsap.to(card, {
             rotateX: 0,
             rotateY: 0,
-            duration: 0.35,
+            duration: t(0.35),
             ease: "power2.out",
           });
         };
@@ -221,17 +228,35 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
     }
 
     const ctx = gsap.context(() => {
+      const motionLevel =
+        document.documentElement.getAttribute("data-motion") || "full";
+      if (motionLevel === "off") {
+        return;
+      }
+      const factor = motionLevel === "soft" ? 0.72 : 1;
       gsap.fromTo(
         ".login-status",
         { opacity: 0, y: -8, scale: 0.985 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.24, ease: "power2.out" }
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.24 * factor,
+          ease: "power2.out",
+        }
       );
 
       if (status.tone === "error") {
         gsap.fromTo(
           ".login-card",
           { x: 0 },
-          { x: -6, duration: 0.08, ease: "power1.inOut", repeat: 3, yoyo: true }
+          {
+            x: -6,
+            duration: 0.08 * factor,
+            ease: "power1.inOut",
+            repeat: 3,
+            yoyo: true,
+          }
         );
       }
     }, card);

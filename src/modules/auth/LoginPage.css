@@ -246,10 +246,10 @@
   color: var(--accent-foreground);
   font-size: 0.98rem;
   font-weight: 600;
-  background: var(--accent-gradient);
-  box-shadow: var(--shadow-accent);
+  background: var(--button-primary-bg);
+  box-shadow: var(--button-primary-shadow);
   cursor: pointer;
-  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  border: 1px solid var(--button-primary-border);
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.24);
   opacity: 1;
   visibility: visible;
@@ -258,8 +258,8 @@
 
 .login-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-accent-lg);
-  filter: saturate(1.06);
+  box-shadow: var(--button-primary-shadow-hover);
+  filter: var(--button-primary-filter-hover);
 }
 
 .login-submit:active:not(:disabled) {
