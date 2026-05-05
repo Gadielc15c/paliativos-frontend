@@ -136,6 +136,7 @@ export interface PaymentRecord {
 export interface ExpenseRecord {
   id: string;
   doctor_id: string | null;
+  patient_id: string | null;
   description: string;
   category: string;
   amount: DecimalValue;
@@ -165,6 +166,8 @@ export interface DocumentRecord {
   classifier_version: string | null;
   validation_flags: string[];
   review_status: string;
+  review_required: boolean;
+  review_trigger_reasons: string[];
   application_status: string;
   current_extraction_result_id: string | null;
   matched_patient_id: string | null;
@@ -223,6 +226,12 @@ export interface PrescriptionRecord {
   dosage: string | null;
   instructions: string | null;
   notes: string | null;
+  status: "active" | "suspended" | "completed" | "discontinued";
+  start_date: string | null;
+  end_date: string | null;
+  discontinued_at: string | null;
+  suspension_reason: string | null;
+  prescription_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -251,9 +260,15 @@ export interface DocumentExtractionResultRecord {
   predicted_document_type_code: string | null;
   schema_version: string | null;
   extracted_payload: Record<string, unknown>;
+  per_field_confidence: Record<string, number>;
   confidence: number | null;
   created_from_run_id: string | null;
   is_validated: boolean;
+  validated_payload: Record<string, unknown> | null;
+  validated_by_user_id: string | null;
+  validated_at: string | null;
+  validation_source: "auto" | "human" | null;
+  ai_human_diff: Record<string, { ai: unknown; human: unknown }> | null;
   validation_flags: string[];
   created_at: string;
   updated_at: string;
@@ -339,6 +354,103 @@ export interface AuditLogRecord {
   before: Record<string, unknown> | null;
   after: Record<string, unknown> | null;
   ip: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClinicalEventRecord {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  event_type: string;
+  source_module: string;
+  occurred_at: string;
+  summary: string;
+  payload_ref: Record<string, string>;
+  created_at: string;
+}
+
+export interface PatientFinancialSummary {
+  total_invoiced: string;
+  total_paid: string;
+  outstanding_balance: string;
+  total_expenses: string;
+  net_margin: string;
+  invoice_count: number;
+  payment_count: number;
+}
+
+export interface ProfileConditionSummary {
+  id: string;
+  name: string;
+  condition_type: string;
+  status: string;
+  is_chronic: boolean | null;
+  normalized_code: string | null;
+  normalized_system: string;
+  onset_date: string | null;
+  recorded_at: string;
+}
+
+export interface ProfilePrescriptionSummary {
+  id: string;
+  medication: string;
+  dosage: string | null;
+  instructions: string | null;
+  status: "active" | "suspended" | "completed" | "discontinued";
+  start_date: string | null;
+  end_date: string | null;
+  prescription_date: string | null;
+}
+
+export interface ProfileConsultationSummary {
+  id: string;
+  consultation_date: string;
+  reason: string | null;
+  notes: string | null;
+}
+
+export interface ProfileDocumentSummary {
+  id: string;
+  title: string;
+  processing_status: string;
+  review_status: string;
+  review_required: boolean;
+  application_status: string;
+  created_at: string;
+}
+
+export interface PatientProfileResponse {
+  patient: PatientRecord & { doctor_name: string };
+  active_conditions: ProfileConditionSummary[];
+  active_prescriptions: ProfilePrescriptionSummary[];
+  recent_consultations: ProfileConsultationSummary[];
+  recent_documents: ProfileDocumentSummary[];
+  recent_events: ClinicalEventRecord[];
+  financial: PatientFinancialSummary;
+}
+
+export interface ReconciliationItemRecord {
+  medication: string;
+  prior_prescription_id: string | null;
+  prior_dosage: string | null;
+  current_dosage: string | null;
+  ai_extracted_dosage: string | null;
+  decision: "continue" | "suspend" | "substitute" | "adjust_dose";
+  new_dosage: string | null;
+  clinical_justification: string | null;
+}
+
+export interface ReconciliationRecord {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  consultation_id: string | null;
+  document_id: string | null;
+  reconciled_by_user_id: string;
+  reconciled_at: string;
+  items: ReconciliationItemRecord[];
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }

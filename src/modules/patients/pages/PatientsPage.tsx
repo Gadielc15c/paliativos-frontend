@@ -3,29 +3,18 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Edit2, FileText, FolderOpen, Plus } from "lucide-react";
 import { PatientList, PatientProfile } from "../components";
-import { usePatients, usePatientDetail } from "../hooks";
+import { usePatients } from "../hooks";
 import Button from "../../../components/common/Button";
 import {
   billingEndpoints,
-  documentsEndpoints,
   episodesEndpoints,
-  financeEndpoints,
-  patientConditionsEndpoints,
   patientsEndpoints,
 } from "../../../services/endpoints";
-import { toNumber } from "../../../services/adapters";
 import type { ApiError } from "../../../types/common";
 import { useContextActions } from "../../../app/store/useContextActions";
 import type { ContextAction } from "../../../app/store/useContextActions";
 import { formatCurrency } from "../../../utils/format";
 import "./PatientsPage.css";
-
-const sortByDateDesc = <T,>(items: T[], accessor: (item: T) => string | null | undefined) =>
-  [...items].sort((left, right) => {
-    const leftTime = new Date(accessor(left) || 0).getTime();
-    const rightTime = new Date(accessor(right) || 0).getTime();
-    return rightTime - leftTime;
-  });
 
 export default function PatientsPage() {
   const navigate = useNavigate();
@@ -49,86 +38,22 @@ export default function PatientsPage() {
   } = usePatients(1, 50, searchQuery);
 
   const {
-    data: selectedPatient,
-    isLoading: patientLoading,
-    isError: patientError,
-    refetch: refetchPatient,
-  } = usePatientDetail(effectiveSelectedPatientId);
-
-  const {
-    data: patientWorkspace,
-    isLoading: workspaceLoading,
-    isError: workspaceError,
-    refetch: refetchWorkspace,
+    data: patientProfile,
+    isLoading: profileLoading,
+    isError: profileError,
+    refetch: refetchProfile,
   } = useQuery({
-    queryKey: ["patient-workspace", effectiveSelectedPatientId],
+    queryKey: ["patient-profile", effectiveSelectedPatientId],
     enabled: !!effectiveSelectedPatientId,
-    queryFn: async () => {
-      const patientId = effectiveSelectedPatientId!;
-      const [conditionsPage, episodesPage, invoicesPage, documentsPage, paymentsPage] =
-        await Promise.all([
-          patientConditionsEndpoints.listForPatient(patientId, 1, 100),
-          episodesEndpoints.list(1, 100),
-          billingEndpoints.listInvoices(1, 100),
-          documentsEndpoints.list(1, 100),
-          financeEndpoints.listPayments(1, 100),
-        ]);
-
-      const episodes = sortByDateDesc(
-        episodesPage.items.filter((episode) => episode.patient_id === patientId),
-        (episode) => episode.start_date
-      );
-      const invoices = sortByDateDesc(
-        invoicesPage.items.filter((invoice) => invoice.patient_id === patientId),
-        (invoice) => invoice.issue_date
-      );
-      const invoiceIds = new Set(invoices.map((invoice) => invoice.id));
-      const payments = sortByDateDesc(
-        paymentsPage.items.filter(
-          (payment) => payment.patient_id === patientId || invoiceIds.has(payment.invoice_id)
-        ),
-        (payment) => payment.payment_date
-      );
-      const documents = sortByDateDesc(
-        documentsPage.items.filter(
-          (document) =>
-            document.patient_id === patientId || document.matched_patient_id === patientId
-        ),
-        (document) => document.created_at
-      );
-
-      const billedTotal = invoices.reduce(
-        (total, invoice) => total + toNumber(invoice.total),
-        0
-      );
-      const paidTotal = payments.reduce(
-        (total, payment) => total + toNumber(payment.amount),
-        0
-      );
-
-      return {
-        conditions: conditionsPage.items,
-        episodes,
-        invoices,
-        documents,
-        payments,
-        summary: {
-          billedTotal,
-          paidTotal,
-          balanceTotal: Math.max(billedTotal - paidTotal, 0),
-          invoiceCount: invoices.length,
-          paymentsCount: payments.length,
-          documentCount: documents.length,
-          appliedDocumentCount: documents.filter((document) => document.application_status === "applied").length,
-          pendingDocumentCount: documents.filter((document) => document.application_status !== "applied").length,
-          episodeCount: episodes.length,
-          openEpisodeCount: episodes.filter((episode) => episode.status === "open").length,
-          conditionCount: conditionsPage.items.length,
-          activeConditionCount: conditionsPage.items.filter((condition) => condition.status === "active").length,
-        },
-      };
-    },
+    queryFn: () => patientsEndpoints.getProfile(effectiveSelectedPatientId!),
+    staleTime: 2 * 60 * 1000,
   });
+
+  const selectedPatient = patientProfile?.patient ?? null;
+  const patientLoading = profileLoading;
+  const patientError = profileError;
+  const refetchPatient = refetchProfile;
+  const refetchWorkspace = refetchProfile;
 
   const patientAlerts = useMemo(() => {
     if (!selectedPatient) return [];
@@ -138,43 +63,40 @@ export default function PatientsPage() {
       message: string;
     }> = [];
 
-    if (!selectedPatient.insuranceCompany) {
+    if (!selectedPatient.insurer_name) {
       alerts.push({
         tone: "warning",
         message: "Paciente sin aseguradora registrada. Conviene completar cobertura antes de facturar.",
       });
     }
 
-    if ((patientWorkspace?.summary.balanceTotal || 0) > 0) {
+    const balance = parseFloat(patientProfile?.financial.outstanding_balance || "0");
+    if (balance > 0) {
       alerts.push({
         tone: "warning",
-        message: `Saldo pendiente acumulado: ${patientWorkspace?.summary.balanceTotal.toFixed(2)}.`,
+        message: `Saldo pendiente acumulado: ${balance.toFixed(2)}.`,
       });
     }
 
-    if ((patientWorkspace?.summary.conditionCount || 0) === 0) {
+    if ((patientProfile?.active_conditions.length || 0) === 0) {
       alerts.push({
         tone: "info",
         message: "Todavía no hay historial médico estructurado para este paciente.",
       });
     }
 
-    if ((patientWorkspace?.summary.pendingDocumentCount || 0) > 0) {
+    const pendingDocs = (patientProfile?.recent_documents || []).filter(
+      (d) => d.application_status !== "applied"
+    ).length;
+    if (pendingDocs > 0) {
       alerts.push({
         tone: "info",
         message: "Hay documentos subidos que todavía no fueron aplicados al dominio.",
       });
     }
 
-    if ((patientWorkspace?.summary.openEpisodeCount || 0) > 0) {
-      alerts.push({
-        tone: "success",
-        message: "Paciente con episodio clínico abierto y en seguimiento.",
-      });
-    }
-
     return alerts;
-  }, [patientWorkspace, selectedPatient]);
+  }, [patientProfile, selectedPatient]);
 
   const handleSelectPatient = (id: string) => {
     setSelectedPatientId(id);
@@ -225,7 +147,7 @@ export default function PatientsPage() {
         const invoice = await billingEndpoints.createInvoice({
           patient_id: effectiveSelectedPatientId,
           issue_date: new Date().toISOString(),
-          insurer_name: selectedPatient?.insuranceCompany || undefined,
+          insurer_name: selectedPatient?.insurer_name || undefined,
           notes: "Factura creada desde interfaz de pacientes",
         });
         setActionMessage(`Factura creada: ${invoice.invoice_number}`);
@@ -348,19 +270,16 @@ export default function PatientsPage() {
       setContextSummary(null, []);
       return;
     }
-    const summary = patientWorkspace?.summary;
+    const financial = patientProfile?.financial;
     setContextSummary("Resumen rápido", [
-      { label: "Paciente", value: selectedPatient.name || "Sin selección" },
-      {
-        label: "Aseguradora",
-        value: selectedPatient.insuranceCompany || "Sin registro",
-      },
-      { label: "Balance", value: formatCurrency(summary?.balanceTotal || 0) },
-      { label: "Documentos", value: String(summary?.documentCount || 0) },
-      { label: "Episodios abiertos", value: String(summary?.openEpisodeCount || 0) },
-      { label: "Condiciones activas", value: String(summary?.activeConditionCount || 0) },
+      { label: "Paciente", value: selectedPatient.full_name || "Sin selección" },
+      { label: "Aseguradora", value: selectedPatient.insurer_name || "Sin registro" },
+      { label: "Balance", value: formatCurrency(parseFloat(financial?.outstanding_balance || "0")) },
+      { label: "Documentos", value: String(patientProfile?.recent_documents.length || 0) },
+      { label: "Condiciones activas", value: String(patientProfile?.active_conditions.length || 0) },
+      { label: "Prescripciones activas", value: String(patientProfile?.active_prescriptions.length || 0) },
     ]);
-  }, [selectedPatient, patientWorkspace, setContextSummary]);
+  }, [selectedPatient, patientProfile, setContextSummary]);
 
   useEffect(() => {
     setContextAlerts(patientAlerts);
@@ -418,13 +337,10 @@ export default function PatientsPage() {
           </section>
         )}
         <PatientProfile
-          patient={selectedPatient}
-          workspace={patientWorkspace}
-          isLoading={patientLoading || workspaceLoading}
-          isError={patientError || workspaceError}
-          onRetry={() => {
-            void Promise.all([refetchPatient(), refetchWorkspace()]);
-          }}
+          profile={patientProfile ?? null}
+          isLoading={patientLoading}
+          isError={patientError}
+          onRetry={() => void refetchProfile()}
         />
       </div>
 

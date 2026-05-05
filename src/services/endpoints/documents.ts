@@ -172,6 +172,21 @@ export const documentsEndpoints = {
     return response.data;
   },
 
+  validateExtraction: async (
+    id: string,
+    data: {
+      extraction_result_id?: string | null;
+      validated_payload: Record<string, unknown>;
+      per_field_confidence?: Record<string, number> | null;
+    }
+  ) => {
+    const response = await httpClient.post<import("../../types/api").DocumentExtractionResultRecord>(
+      `/documents/${id}/validate-extraction`,
+      data
+    );
+    return response.data;
+  },
+
   delete: async (id: string) => {
     await httpClient.delete(`/documents/${id}`);
   },

@@ -16,3 +16,4 @@ export {
   diagnosticsEndpoints,
   prescriptionsEndpoints,
 } from "./clinical";
+export { reconciliationEndpoints } from "./reconciliation";

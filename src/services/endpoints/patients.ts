@@ -1,6 +1,6 @@
 // Endpoint functions para Patients
 import { httpClient } from "../http";
-import type { PageResponse, PatientRecord } from "../../types/api";
+import type { ClinicalEventRecord, PageResponse, PatientProfileResponse, PatientRecord } from "../../types/api";
 
 export const patientsEndpoints = {
   list: async (page = 1, pageSize = 50) => {
@@ -60,5 +60,17 @@ export const patientsEndpoints = {
 
   delete: async (id: string) => {
     await httpClient.delete(`/patients/${id}`);
+  },
+
+  getProfile: async (id: string) => {
+    const response = await httpClient.get<PatientProfileResponse>(`/patients/${id}/profile`);
+    return response.data;
+  },
+
+  getTimeline: async (id: string, limit = 100) => {
+    const response = await httpClient.get<ClinicalEventRecord[]>(`/patients/${id}/timeline`, {
+      params: { limit },
+    });
+    return response.data;
   },
 };

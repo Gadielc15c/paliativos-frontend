@@ -2,14 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { gsap } from "gsap";
-import { UploadCloud } from "lucide-react";
+import { AlertTriangle, UploadCloud } from "lucide-react";
 import Badge from "../../../components/common/Badge";
 import Button from "../../../components/common/Button";
 import Input from "../../../components/common/Input";
 import { Error as ErrorState, Loading } from "../../../components/states/StateContainers";
 import { documentsEndpoints, patientsEndpoints } from "../../../services/endpoints";
+import type { DocumentExtractionResultRecord, DocumentRecord } from "../../../types/api";
 import type { ApiError } from "../../../types/common";
 import { formatDateTime } from "../../../utils/format";
+import ExtractionValidationModal from "../components/ExtractionValidationModal";
 import "./DocumentsPage.css";
 
 type BackendPrediction = "FACTURA" | "HOJA_ADMISION" | "UNKNOWN" | "UNSUPPORTED";
@@ -58,6 +60,10 @@ export default function DocumentsPage() {
   const [isWaitingBackend, setIsWaitingBackend] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [validationModal, setValidationModal] = useState<{
+    document: DocumentRecord;
+    extractionResult: DocumentExtractionResultRecord;
+  } | null>(null);
 
   const waitingDotsRef = useRef<HTMLSpanElement | null>(null);
   const cardsRef = useRef<HTMLDivElement | null>(null);
@@ -150,6 +156,18 @@ export default function DocumentsPage() {
       gsap.set(waitingDotsRef.current, { opacity: 1 });
     };
   }, [isWaitingBackend]);
+
+  const handleOpenValidationModal = async (doc: DocumentRecord) => {
+    try {
+      const resultsPage = await documentsEndpoints.listExtractionResults(doc.id, 1, 1);
+      const result = resultsPage.items[0];
+      if (result) {
+        setValidationModal({ document: doc, extractionResult: result });
+      }
+    } catch {
+      // silently ignore — doc list still shows
+    }
+  };
 
   const setSelectedFile = (nextFile: File | null) => {
     const validationError = validateSelectedFile(nextFile);
@@ -281,6 +299,10 @@ export default function DocumentsPage() {
     return <Loading />;
   }
 
+  const docsNeedingReview = recentDocuments.filter(
+    (d) => d.review_required && d.review_status === "manual_review"
+  );
+
   if (patientsError || documentsError) {
     return (
       <ErrorState
@@ -294,6 +316,32 @@ export default function DocumentsPage() {
 
   return (
     <div className="data-screen documents-page-simple" ref={cardsRef}>
+      {validationModal && (
+        <ExtractionValidationModal
+          document={validationModal.document}
+          extractionResult={validationModal.extractionResult}
+          onClose={() => setValidationModal(null)}
+        />
+      )}
+
+      {docsNeedingReview.length > 0 && (
+        <section className="docs-review-banner" aria-live="polite">
+          <AlertTriangle size={16} />
+          <span>
+            {docsNeedingReview.length === 1
+              ? "1 documento requiere revisión de extracción IA"
+              : `${docsNeedingReview.length} documentos requieren revisión de extracción IA`}
+          </span>
+          <button
+            type="button"
+            className="docs-review-banner-btn"
+            onClick={() => void handleOpenValidationModal(docsNeedingReview[0])}
+          >
+            Revisar
+          </button>
+        </section>
+      )}
+
       <section className="data-screen-header docs-header-compact">
         <div className="data-screen-copy">
           <span className="data-screen-eyebrow">Documentos</span>
@@ -447,6 +495,7 @@ export default function DocumentsPage() {
                   <th>Proceso</th>
                   <th>Revisión</th>
                   <th>Fecha</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -474,6 +523,19 @@ export default function DocumentsPage() {
                       </Badge>
                     </td>
                     <td>{formatDateTime(document.created_at)}</td>
+                    <td>
+                      {document.review_required && document.review_status === "manual_review" && (
+                        <button
+                          type="button"
+                          className="docs-review-action-btn"
+                          onClick={() => void handleOpenValidationModal(document)}
+                          title="Revisar extracción IA"
+                        >
+                          <AlertTriangle size={13} />
+                          Revisar
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

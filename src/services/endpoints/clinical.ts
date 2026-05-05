@@ -5,6 +5,8 @@ import type {
   PrescriptionRecord,
 } from "../../types/api";
 
+type PrescriptionStatus = "active" | "suspended" | "completed" | "discontinued";
+
 export const consultationsEndpoints = {
   create: async (data: {
     patient_id: string;
@@ -57,6 +59,21 @@ export const prescriptionsEndpoints = {
     const response = await httpClient.get<PrescriptionRecord[]>(
       `/prescriptions/${patientId}`
     );
+    return response.data;
+  },
+
+  update: async (
+    id: string,
+    data: Partial<{
+      status: PrescriptionStatus;
+      suspension_reason: string | null;
+      medication: string;
+      dosage: string | null;
+      instructions: string | null;
+      end_date: string | null;
+    }>
+  ) => {
+    const response = await httpClient.patch<PrescriptionRecord>(`/prescriptions/${id}`, data);
     return response.data;
   },
 };

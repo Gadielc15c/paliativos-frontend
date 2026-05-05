@@ -1,0 +1,229 @@
+.extraction-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+.extraction-modal {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.extraction-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.extraction-modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.extraction-modal-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+.extraction-modal-close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.extraction-modal-close:hover {
+  color: var(--text-primary);
+}
+
+.extraction-modal-confidence-banner {
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.82rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.extraction-modal-confidence-banner.confidence-low {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.extraction-modal-confidence-banner.confidence-medium {
+  background: rgba(217, 119, 6, 0.08);
+  color: #d97706;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.extraction-modal-confidence-banner.confidence-high {
+  background: rgba(22, 163, 74, 0.08);
+  color: #16a34a;
+  border-bottom: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.extraction-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.extraction-modal-instruction {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.extraction-modal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.extraction-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+
+.extraction-modal-field.confidence-low {
+  border-color: rgba(220, 38, 38, 0.4);
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.extraction-modal-field.confidence-medium {
+  border-color: rgba(217, 119, 6, 0.35);
+  background: rgba(217, 119, 6, 0.04);
+}
+
+.extraction-modal-field-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.extraction-modal-field-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.extraction-modal-field-confidence {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.extraction-modal-field-confidence.confidence-low {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.extraction-modal-field-confidence.confidence-medium {
+  color: #d97706;
+  background: rgba(217, 119, 6, 0.1);
+}
+
+.extraction-modal-field-confidence.confidence-high {
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.extraction-modal-field-input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.extraction-modal-field-input:focus {
+  outline: none;
+  border-color: var(--color-accent, #2563eb);
+}
+
+.extraction-modal-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.extraction-modal-error {
+  color: #dc2626;
+  font-size: 0.85rem;
+  padding: 0 var(--space-4);
+  flex-shrink: 0;
+}
+
+.extraction-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.extraction-modal-reject-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.extraction-modal-reject-textarea {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.extraction-modal-reject-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent, #2563eb);
+}

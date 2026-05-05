@@ -47,6 +47,7 @@ export const financeEndpoints = {
   createExpense: async (
     data: {
       doctor_id?: string | null;
+      patient_id?: string | null;
       description: string;
       category: string;
       amount: number;
