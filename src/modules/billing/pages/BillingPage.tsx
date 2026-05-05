@@ -52,6 +52,24 @@ export default function BillingPage() {
     await Promise.all([refetchInvoice(), refetchInvoices()]);
   };
 
+  const handleAddInvoiceItem = async (payload: {
+    description: string;
+    quantity: number;
+    unitPrice: number;
+  }) => {
+    if (!selectedInvoiceId) return;
+    const subtotal = payload.quantity * payload.unitPrice;
+    await billingEndpoints.addItem(selectedInvoiceId, {
+      description: payload.description,
+      quantity: payload.quantity,
+      unit_price: payload.unitPrice,
+      insurer_covered_amount: 0,
+      patient_amount: subtotal,
+    });
+    await billingEndpoints.recalculateInvoice(selectedInvoiceId);
+    await Promise.all([refetchInvoice(), refetchInvoices()]);
+  };
+
   return (
     <div className="billing-page">
       <div className="billing-list-column">
@@ -77,6 +95,7 @@ export default function BillingPage() {
           isError={invoiceError}
           onRetry={refetchInvoice}
           onUpdateInvoice={handleUpdateInvoice}
+          onAddInvoiceItem={handleAddInvoiceItem}
         />
       </div>
     </div>

@@ -283,6 +283,21 @@
   background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
 }
 
+.sidebar-logout-button {
+  justify-content: center;
+  gap: var(--space-2);
+  border-color: color-mix(in srgb, var(--accent-danger) 55%, var(--border-subtle));
+  color: var(--accent-danger);
+  background: color-mix(in srgb, var(--accent-danger) 8%, transparent);
+}
+
+.sidebar-logout-button:hover {
+  border-color: var(--accent-danger);
+  color: #fff;
+  background: var(--accent-danger);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent-danger) 34%, transparent);
+}
+
 .sidebar-role-menu {
   display: flex;
   flex-direction: column;

@@ -129,7 +129,7 @@
 .patient-profile-section-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: var(--space-3);
 }
 
@@ -428,22 +428,27 @@
 .patient-profile-add-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border: 1px solid var(--border-medium);
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 45%, var(--border-medium));
   border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 500;
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  color: var(--accent-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: all 0.2s ease;
 }
 
 .patient-profile-add-btn:hover {
-  background: var(--bg-elevated);
-  border-color: var(--accent-primary, #2563eb);
-  color: var(--accent-primary, #2563eb);
+  background: var(--accent-gradient);
+  border-color: color-mix(in srgb, var(--accent-primary) 78%, transparent);
+  color: var(--accent-foreground);
+  box-shadow: var(--shadow-accent);
 }
 
 /* ── Inline forms ─────────────────────────────── */
@@ -454,8 +459,14 @@
   padding: var(--space-4);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  background: var(--bg-elevated);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-primary) 10%, var(--bg-elevated)),
+      color-mix(in srgb, var(--accent-secondary) 7%, var(--bg-elevated))
+    );
   margin-bottom: var(--space-2);
+  box-shadow: var(--shadow-sm);
 }
 
 .patient-profile-form-row {
@@ -470,7 +481,10 @@
   gap: 5px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .patient-profile-form-input,
@@ -478,7 +492,7 @@
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
   color: var(--text-primary);
   font-size: 0.88rem;
   width: 100%;
@@ -491,13 +505,14 @@
 .patient-profile-form-select:focus {
   outline: none;
   border-color: var(--accent-primary, #2563eb);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
 }
 
 .patient-profile-form-textarea {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
   color: var(--text-primary);
   font-size: 0.88rem;
   width: 100%;
@@ -510,6 +525,7 @@
 .patient-profile-form-textarea:focus {
   outline: none;
   border-color: var(--accent-primary, #2563eb);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
 }
 
 .patient-profile-form-check {
@@ -517,7 +533,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-weight: 500;
   cursor: pointer;
 }
@@ -534,19 +550,22 @@
 }
 
 .patient-profile-form-submit {
-  padding: var(--space-2) var(--space-4);
-  background: var(--accent-primary, #2563eb);
-  color: #fff;
-  border: none;
+  min-height: 42px;
+  padding: var(--space-2) var(--space-5);
+  background: var(--accent-gradient);
+  color: var(--accent-foreground);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 65%, transparent);
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
 }
 
 .patient-profile-form-submit:hover:not(:disabled) {
-  background: var(--accent-hover, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-accent);
+  filter: brightness(1.05);
 }
 
 .patient-profile-form-submit:disabled {

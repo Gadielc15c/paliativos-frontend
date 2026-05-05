@@ -12,6 +12,14 @@ Eliminar acciones pseudo-funcionales y reemplazarlas por flujos reales contra AP
 - `Cerrar sesión` ahora limpia tokens, permisos y usuario, devolviendo al login.
 - Archivo: `src/app/layouts/TopBar.tsx`
 
+### 1.1) Cierre de sesión visible en Sidebar
+
+- Se agregó botón rojo `Cerrar sesión` junto a `Ajustes visuales`.
+- Limpia sesión y devuelve a login inmediatamente.
+- Archivos:
+  - `src/app/layouts/Sidebar.tsx`
+  - `src/app/layouts/layouts.css`
+
 ### 2) Pacientes: acciones contextuales ya no hardcodeadas
 
 - `Emitir factura`:
@@ -23,6 +31,15 @@ Eliminar acciones pseudo-funcionales y reemplazarlas por flujos reales contra AP
   - Ahora: abre editor de notas y guarda contenido real.
   - Usa `PATCH /patients/{id}`.
 - Archivo: `src/modules/patients/pages/PatientsPage.tsx`
+
+### 2.1) Modo exclusivo de paciente (prioridad UX)
+
+- Al seleccionar paciente, se activa foco en perfil.
+- Nuevo modo exclusivo para priorizar atención clínica del paciente seleccionado.
+- Permite alternar entre vista enfocada y listado completo.
+- Archivos:
+  - `src/modules/patients/pages/PatientsPage.tsx`
+  - `src/modules/patients/pages/PatientsPage.css`
 
 ### 3) Episodios: edición real
 
@@ -48,11 +65,14 @@ Eliminar acciones pseudo-funcionales y reemplazarlas por flujos reales contra AP
 
 - Antes: detalle de factura solo visual.
 - Ahora: edición de estado y notas desde el panel de detalle.
+- Además: alta rápida de ítems en la factura + recálculo automático de totales.
 - Usa `PATCH /invoices/{id}`.
+- Usa `POST /invoices/{id}/items` + `POST /invoices/{id}/recalculate`.
 - Archivos:
   - `src/modules/billing/components/InvoiceDetail.tsx`
   - `src/modules/billing/components/InvoiceDetail.css`
   - `src/modules/billing/pages/BillingPage.tsx`
+  - `src/modules/billing/hooks/useBilling.ts`
 
 ## Verificación ejecutada
 

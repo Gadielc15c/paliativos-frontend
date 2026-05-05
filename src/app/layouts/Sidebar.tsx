@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { clearSession } from "../../services/auth";
 import {
   Users,
   FileText,
@@ -12,6 +13,7 @@ import {
   UserSquare2,
   SlidersHorizontal,
   Menu,
+  LogOut,
 } from "lucide-react";
 
 interface NavItem {
@@ -33,8 +35,17 @@ const navItems: NavItem[] = [
 ];
 
 export default function Sidebar() {
-  const { sidebarCollapsed, sidebarMobileOpen, toggleSidebar, toggleSidebarMobile, closeSidebarMobile } =
+  const {
+    sidebarCollapsed,
+    sidebarMobileOpen,
+    toggleSidebar,
+    toggleSidebarMobile,
+    closeSidebarMobile,
+    setUser,
+    setPermissions,
+  } =
     useAppStore();
+  const navigate = useNavigate();
   const isMobileViewport = useMemo(
     () => typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches,
     []
@@ -47,6 +58,16 @@ export default function Sidebar() {
       return;
     }
     toggleSidebar();
+  };
+
+  const handleLogout = () => {
+    clearSession();
+    setPermissions([]);
+    setUser(null);
+    if (isMobileViewport) {
+      closeSidebarMobile();
+    }
+    navigate("/");
   };
 
   return (
@@ -106,6 +127,16 @@ export default function Sidebar() {
           <SlidersHorizontal size={18} />
           {showLabels && <span>Ajustes visuales</span>}
         </NavLink>
+
+        <button
+          type="button"
+          className="sidebar-role-button sidebar-logout-button"
+          onClick={handleLogout}
+          title="Cerrar sesión"
+        >
+          <LogOut size={18} />
+          {showLabels && <span>Cerrar sesión</span>}
+        </button>
       </div>
     </aside>
   );

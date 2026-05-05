@@ -166,6 +166,7 @@
 }
 
 .invoice-detail-edit select,
+.invoice-detail-edit input,
 .invoice-detail-edit textarea {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -174,6 +175,12 @@
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: var(--text-sm);
+}
+
+.invoice-detail-edit-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
 }
 
 .invoice-detail-edit-actions {
@@ -193,4 +200,10 @@
 
 .invoice-detail-feedback.error {
   color: var(--accent-danger);
+}
+
+@media (max-width: 640px) {
+  .invoice-detail-edit-row {
+    grid-template-columns: 1fr;
+  }
 }

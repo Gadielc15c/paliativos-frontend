@@ -15,6 +15,11 @@ interface InvoiceDetailProps {
     status: "draft" | "issued" | "partially_paid" | "paid" | "cancelled";
     notes: string | null;
   }) => Promise<void>;
+  onAddInvoiceItem?: (payload: {
+    description: string;
+    quantity: number;
+    unitPrice: number;
+  }) => Promise<void>;
 }
 
 const getStatusVariant = (status: string): "success" | "warning" | "error" | "info" => {
@@ -38,6 +43,7 @@ export default function InvoiceDetail({
   isError,
   onRetry,
   onUpdateInvoice,
+  onAddInvoiceItem,
 }: InvoiceDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [statusDraft, setStatusDraft] =
@@ -46,6 +52,11 @@ export default function InvoiceDetail({
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [itemDescription, setItemDescription] = useState("");
+  const [itemQuantity, setItemQuantity] = useState("1");
+  const [itemUnitPrice, setItemUnitPrice] = useState("");
+  const [isAddingItem, setIsAddingItem] = useState(false);
+  const [itemError, setItemError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!invoice) return;
@@ -54,6 +65,10 @@ export default function InvoiceDetail({
     setSaveMessage(null);
     setSaveError(null);
     setIsEditing(false);
+    setItemDescription("");
+    setItemQuantity("1");
+    setItemUnitPrice("");
+    setItemError(null);
   }, [invoice?.id]);
 
   if (isLoading) return <Loading />;
@@ -88,6 +103,47 @@ export default function InvoiceDetail({
     void run();
   };
 
+  const handleAddItem = () => {
+    if (!onAddInvoiceItem) return;
+    const quantity = Number(itemQuantity);
+    const unitPrice = Number(itemUnitPrice);
+    if (!itemDescription.trim()) {
+      setItemError("Describe el item.");
+      return;
+    }
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setItemError("Cantidad inválida.");
+      return;
+    }
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+      setItemError("Precio unitario inválido.");
+      return;
+    }
+
+    const run = async () => {
+      setIsAddingItem(true);
+      setItemError(null);
+      try {
+        await onAddInvoiceItem({
+          description: itemDescription.trim(),
+          quantity,
+          unitPrice,
+        });
+        setItemDescription("");
+        setItemQuantity("1");
+        setItemUnitPrice("");
+      } catch (error) {
+        setItemError(
+          error instanceof globalThis.Error ? error.message : "No se pudo agregar item."
+        );
+      } finally {
+        setIsAddingItem(false);
+      }
+    };
+
+    void run();
+  };
+
   return (
     <div className="invoice-detail">
       <div className="invoice-detail-header">
@@ -104,7 +160,9 @@ export default function InvoiceDetail({
         </div>
         <div className="invoice-field">
           <span className="label">Doctor</span>
-          <span className="value">{invoice.doctorName || invoice.doctorId}</span>
+          <span className="value">
+            {invoice.doctorName || `Sin nombre (ID: ${invoice.doctorId})`}
+          </span>
         </div>
         <div className="invoice-field">
           <span className="label">Aseguradora</span>
@@ -134,6 +192,45 @@ export default function InvoiceDetail({
 
       <div className="invoice-detail-summary">
         <h3>Ítems</h3>
+        <div className="invoice-detail-edit">
+          <label>
+            Descripción
+            <input
+              value={itemDescription}
+              onChange={(event) => setItemDescription(event.target.value)}
+              placeholder="Ej: Consulta médica"
+            />
+          </label>
+          <div className="invoice-detail-edit-row">
+            <label>
+              Cantidad
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={itemQuantity}
+                onChange={(event) => setItemQuantity(event.target.value)}
+              />
+            </label>
+            <label>
+              Precio unitario
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={itemUnitPrice}
+                onChange={(event) => setItemUnitPrice(event.target.value)}
+                placeholder="0.00"
+              />
+            </label>
+          </div>
+          <div className="invoice-detail-edit-actions">
+            <Button size="sm" onClick={handleAddItem} isLoading={isAddingItem}>
+              Agregar ítem
+            </Button>
+          </div>
+          {itemError && <p className="invoice-detail-feedback error">{itemError}</p>}
+        </div>
         {invoice.items.length === 0 ? (
           <p>Sin ítems registrados.</p>
         ) : (

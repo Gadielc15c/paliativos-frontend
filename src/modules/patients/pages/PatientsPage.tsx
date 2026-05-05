@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Edit2, FileText, FolderOpen, Plus } from "lucide-react";
@@ -20,7 +20,9 @@ export default function PatientsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialPatientId = searchParams.get("patientId");
+  const initialFocusMode = searchParams.get("focus") === "1";
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [patientFocusMode, setPatientFocusMode] = useState(initialFocusMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeAction, setActiveAction] = useState<"episode" | "invoice" | "update" | null>(
     null
@@ -45,6 +47,7 @@ export default function PatientsPage() {
     notes: "",
   });
   const [notesDraft, setNotesDraft] = useState("");
+  const profileColumnRef = useRef<HTMLDivElement | null>(null);
 
   const effectiveSelectedPatientId = selectedPatientId || initialPatientId;
 
@@ -118,8 +121,10 @@ export default function PatientsPage() {
 
   const handleSelectPatient = (id: string) => {
     setSelectedPatientId(id);
+    setPatientFocusMode(true);
     const next = new URLSearchParams(searchParams);
     next.set("patientId", id);
+    next.set("focus", "1");
     setSearchParams(next, { replace: true });
     setActionMessage(null);
     setActionError(null);
@@ -134,6 +139,18 @@ export default function PatientsPage() {
       notes: "",
     });
     setNotesDraft("");
+    profileColumnRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleToggleFocusMode = () => {
+    const nextFocus = !patientFocusMode;
+    setPatientFocusMode(nextFocus);
+    const next = new URLSearchParams(searchParams);
+    if (effectiveSelectedPatientId) {
+      next.set("patientId", effectiveSelectedPatientId);
+    }
+    next.set("focus", nextFocus ? "1" : "0");
+    setSearchParams(next, { replace: true });
   };
 
   const handleRegisterEpisode = () => {
@@ -383,7 +400,7 @@ export default function PatientsPage() {
   }, [patientAlerts, setContextAlerts]);
 
   return (
-    <div className="patients-page">
+    <div className={`patients-page ${patientFocusMode ? "patient-focus-mode" : ""}`}>
       <div className="patients-list-column">
         <div className="patients-search-bar">
           <input
@@ -404,7 +421,19 @@ export default function PatientsPage() {
         />
       </div>
 
-      <div className="patients-profile-column">
+      <div className="patients-profile-column" ref={profileColumnRef}>
+        {effectiveSelectedPatientId && (
+          <section className="patients-focus-header">
+            <div className="patients-focus-copy">
+              <span className="patients-focus-label">Paciente en prioridad</span>
+              <strong>{selectedPatient?.full_name || effectiveSelectedPatientId}</strong>
+            </div>
+            <Button variant="secondary" size="sm" onClick={handleToggleFocusMode}>
+              {patientFocusMode ? "Mostrar listado" : "Modo exclusivo"}
+            </Button>
+          </section>
+        )}
+
         <section className="patients-inline-actions" aria-label="Acciones de paciente">
           {contextualActions.map((action) => (
             <Button
