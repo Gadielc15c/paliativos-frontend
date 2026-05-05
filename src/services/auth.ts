@@ -44,7 +44,7 @@ export interface AuthSession {
 }
 
 interface LoginPayload {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -76,7 +76,15 @@ export const getPermissionsForRole = (role: User["role"]): Permission[] =>
   PERMISSIONS_BY_ROLE[role] || [];
 
 export const login = async (payload: LoginPayload) => {
-  const response = await httpClient.post<AuthTokenResponse>("/auth/login", payload);
+  const body = new URLSearchParams({
+    username: payload.username,
+    password: payload.password,
+  });
+  const response = await httpClient.post<AuthTokenResponse>("/auth/login-form", body, {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  });
   persistTokens(response.data);
   return response.data;
 };

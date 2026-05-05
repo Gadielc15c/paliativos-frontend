@@ -1,5 +1,5 @@
 import { FormEvent, useLayoutEffect, useRef, useState } from "react";
-import { Loader, LogIn, AlertTriangle } from "lucide-react";
+import { Loader, LogIn, AlertTriangle, HeartPulse, Mail, Lock } from "lucide-react";
 import gsap from "gsap";
 import { login, restoreSession } from "../../services/auth";
 import type { AuthSession } from "../../services/auth";
@@ -12,7 +12,7 @@ interface LoginPageProps {
 export function LoginPage({ onSuccess }: LoginPageProps) {
   const pageRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLFormElement | null>(null);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,21 +32,19 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
     }
 
     const ctx = gsap.context(() => {
-      gsap.set(card, { transformPerspective: 900 });
-      gsap.set(".login-aura", { transformOrigin: "50% 50%" });
-
       const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
       intro
-        .from(".login-aura", { scale: 0.8, opacity: 0, duration: 1 }, 0)
-        .from(".login-card", { y: 36, opacity: 0, duration: 0.8 }, 0.08)
-        .from(".login-title", { y: 20, opacity: 0, duration: 0.6 }, 0.18)
-        .from(".login-subtitle", { y: 16, opacity: 0, duration: 0.5 }, 0.24)
+        .from(".login-card", { y: 18, opacity: 0, duration: 0.54 }, 0)
+        .from(".login-brand-mark", { scale: 0.88, opacity: 0, duration: 0.32 }, 0.1)
+        .from(".login-brand-name", { y: 6, opacity: 0, duration: 0.28 }, 0.15)
+        .from(".login-title", { y: 10, opacity: 0, duration: 0.32 }, 0.16)
+        .from(".login-subtitle", { y: 8, opacity: 0, duration: 0.28 }, 0.2)
         .from(
           ".login-field",
-          { y: 18, opacity: 0, duration: 0.48, stagger: 0.09 },
-          0.3
+          { y: 10, opacity: 0, duration: 0.32, stagger: 0.06 },
+          0.22
         )
-        .from(".login-submit", { y: 14, opacity: 0, duration: 0.48 }, 0.52);
+        .from(".login-submit", { y: 8, opacity: 0, duration: 0.28 }, 0.34);
 
       const inputs = Array.from(
         card.querySelectorAll<HTMLInputElement>(".login-field input")
@@ -65,14 +63,8 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
 
         const focusIn = () => {
           gsap.to(field, {
-            y: -2,
-            duration: 0.22,
-            ease: "power2.out",
-          });
-          gsap.to(".login-aura", {
-            opacity: 0.9,
-            scale: 1.06,
-            duration: 0.3,
+            y: -1,
+            duration: 0.16,
             ease: "power2.out",
           });
         };
@@ -80,13 +72,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
         const focusOut = () => {
           gsap.to(field, {
             y: 0,
-            duration: 0.22,
-            ease: "power2.out",
-          });
-          gsap.to(".login-aura", {
-            opacity: 0.72,
-            scale: 1,
-            duration: 0.35,
+            duration: 0.16,
             ease: "power2.out",
           });
         };
@@ -96,47 +82,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
         cleanupHandlers.push({ input, focusIn, focusOut });
       });
 
-      const moveCard = (event: MouseEvent) => {
-        const bounds = card.getBoundingClientRect();
-        const offsetX = (event.clientX - bounds.left) / bounds.width - 0.5;
-        const offsetY = (event.clientY - bounds.top) / bounds.height - 0.5;
-
-        gsap.to(card, {
-          rotateY: offsetX * 7,
-          rotateX: -offsetY * 7,
-          transformOrigin: "50% 50%",
-          duration: 0.35,
-          ease: "power2.out",
-        });
-        gsap.to(".login-aura", {
-          xPercent: offsetX * 10,
-          yPercent: offsetY * 10,
-          duration: 0.4,
-          ease: "power2.out",
-        });
-      };
-
-      const resetCard = () => {
-        gsap.to(card, {
-          rotateX: 0,
-          rotateY: 0,
-          duration: 0.45,
-          ease: "power2.out",
-        });
-        gsap.to(".login-aura", {
-          xPercent: 0,
-          yPercent: 0,
-          duration: 0.45,
-          ease: "power2.out",
-        });
-      };
-
-      card.addEventListener("mousemove", moveCard);
-      card.addEventListener("mouseleave", resetCard);
-
       return () => {
-        card.removeEventListener("mousemove", moveCard);
-        card.removeEventListener("mouseleave", resetCard);
         cleanupHandlers.forEach(({ input, focusIn, focusOut }) => {
           input.removeEventListener("focus", focusIn);
           input.removeEventListener("blur", focusOut);
@@ -187,7 +133,12 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   }, [error]);
 
   useLayoutEffect(() => {
-    const button = cardRef.current?.querySelector<HTMLButtonElement>(
+    const card = cardRef.current;
+    if (!card) {
+      return;
+    }
+
+    const button = card.querySelector<HTMLButtonElement>(
       ".login-submit"
     );
     if (!button) {
@@ -197,7 +148,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
     const ctx = gsap.context(() => {
       if (submitting) {
         gsap.to(button, {
-          scale: 0.98,
+          scale: 0.985,
           duration: 0.12,
           ease: "power2.out",
           yoyo: true,
@@ -210,7 +161,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           ease: "power2.out",
         });
       }
-    }, cardRef);
+    }, card);
 
     return () => {
       ctx.revert();
@@ -222,7 +173,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
     setError(null);
     setSubmitting(true);
     try {
-      await login({ email: email.trim(), password });
+      await login({ username: username.trim(), password });
       const session = await restoreSession();
       if (!session) {
         throw new Error("No se pudo cargar el usuario tras el login.");
@@ -247,36 +198,49 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
 
   return (
     <div className="login-page" ref={pageRef}>
-      <div className="login-aura" aria-hidden />
       <form className="login-card" onSubmit={handleSubmit} ref={cardRef}>
+        <div className="login-brand" aria-hidden>
+          <div className="login-brand-mark">
+            <HeartPulse size={18} />
+          </div>
+          <span className="login-brand-name">Paliativos</span>
+        </div>
+
         <div className="login-header">
-          <h1 className="login-title">Paliativos</h1>
-          <p className="login-subtitle">Inicia sesión para continuar</p>
+          <h1 className="login-title">Iniciar sesión</h1>
+          <p className="login-subtitle">Accede con tu usuario institucional</p>
         </div>
 
         <label className="login-field">
-          <span className="login-label">Correo</span>
-          <input
-            type="email"
-            autoComplete="username"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            disabled={submitting}
-            placeholder="admin@cascantelabs.com"
-          />
+          <span className="login-label">Usuario</span>
+          <div className="login-input-wrap">
+            <Mail size={16} className="login-input-icon" />
+            <input
+              type="text"
+              autoComplete="username"
+              required
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              disabled={submitting}
+              placeholder="admin@example.com"
+            />
+          </div>
         </label>
 
         <label className="login-field">
           <span className="login-label">Contraseña</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            disabled={submitting}
-          />
+          <div className="login-input-wrap">
+            <Lock size={16} className="login-input-icon" />
+            <input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              disabled={submitting}
+              placeholder="Ingresa tu contraseña"
+            />
+          </div>
         </label>
 
         {error && (
@@ -289,7 +253,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
         <button
           type="submit"
           className="login-submit"
-          disabled={submitting || !email || !password}
+          disabled={submitting || !username || !password}
         >
           {submitting ? (
             <Loader size={16} className="login-spinner" />
