@@ -14,6 +14,18 @@ interface FieldErrors {
   password?: string;
 }
 
+const BACKGROUND_PARTICLES = [
+  { left: "12%", top: "22%", size: 10, delay: 0 },
+  { left: "24%", top: "72%", size: 8, delay: 0.2 },
+  { left: "34%", top: "34%", size: 12, delay: 0.4 },
+  { left: "48%", top: "18%", size: 9, delay: 0.7 },
+  { left: "56%", top: "76%", size: 11, delay: 0.3 },
+  { left: "68%", top: "30%", size: 8, delay: 0.5 },
+  { left: "74%", top: "64%", size: 10, delay: 0.8 },
+  { left: "82%", top: "24%", size: 7, delay: 0.6 },
+  { left: "88%", top: "48%", size: 9, delay: 0.1 },
+];
+
 export function LoginPage({ onSuccess }: LoginPageProps) {
   const pageRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLFormElement | null>(null);
@@ -104,6 +116,30 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
         repeat: -1,
         yoyo: true,
         ease: "sine.inOut",
+      });
+      gsap.to(".ambient-c", {
+        xPercent: -5,
+        yPercent: -6,
+        scale: 1.12,
+        duration: 13.5,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+
+      const particles = gsap.utils.toArray<HTMLElement>(".ambient-particle");
+      particles.forEach((particle, index) => {
+        gsap.to(particle, {
+          y: index % 2 === 0 ? -18 : -12,
+          x: index % 3 === 0 ? 8 : -6,
+          opacity: 0.62,
+          scale: 1.18,
+          duration: 3.6 + index * 0.25,
+          delay: Number(particle.dataset.delay || 0),
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
       });
 
       const inputs = Array.from(
@@ -246,7 +282,23 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
     <div className="login-page" ref={pageRef}>
       <div className="ambient ambient-a" aria-hidden />
       <div className="ambient ambient-b" aria-hidden />
+      <div className="ambient ambient-c" aria-hidden />
       <div className="breath-circle" aria-hidden />
+      <div className="ambient-particles" aria-hidden>
+        {BACKGROUND_PARTICLES.map((particle, index) => (
+          <span
+            key={index}
+            className="ambient-particle"
+            data-delay={particle.delay}
+            style={{
+              left: particle.left,
+              top: particle.top,
+              width: particle.size,
+              height: particle.size,
+            }}
+          />
+        ))}
+      </div>
 
       <form className="login-card" onSubmit={handleSubmit} ref={cardRef} noValidate>
         <div className="login-brand">

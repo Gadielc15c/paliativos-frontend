@@ -1,78 +1,94 @@
-/* Design Tokens - Medical/Financial UI System - LIGHT THEME */
-
 :root {
-  /* Colors - Light theme base */
-  --bg-main: #FFFFFF;
-  --bg-elevated: #F6F8FA;
-  --bg-glass: rgba(246, 248, 250, 0.9);
+  color-scheme: light;
 
-  --text-primary: #24292F;
-  --text-muted: #57606A;
-  --text-subtle: #8B949E;
+  /* Minimalist Modern Core */
+  --background: #fafafa;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --ring: #0052ff;
+  --accent: #0052ff;
+  --accent-secondary: #4d7cff;
+  --accent-foreground: #ffffff;
+  --accent-gradient: linear-gradient(135deg, #0052ff, #4d7cff);
+  --accent-soft: rgba(0, 82, 255, 0.1);
+  --accent-shadow: rgba(0, 82, 255, 0.28);
+  --accent-shadow-strong: rgba(0, 82, 255, 0.38);
 
-  /* Semantic Accents */
-  --accent-primary: #0969DA; /* Professional blue */
-  --accent-finance: #1F6FEB; /* Financial blue */
-  --accent-warning: #D97706; /* Clinical amber */
-  --accent-danger: #CF222E; /* Critical red */
-  --accent-success: #1A7F37; /* Surgical green */
+  /* Semantic */
+  --state-success: #1a7f37;
+  --state-warning: #d97706;
+  --state-error: #cf222e;
+  --state-info: #0052ff;
 
-  /* State Colors */
-  --state-success: #1A7F37;
-  --state-warning: #D97706;
-  --state-error: #CF222E;
-  --state-info: #0969DA;
-
-  /* Borders & Dividers */
-  --border-subtle: #EAEEF2;
-  --border-medium: #D0D7DE;
+  /* Compatibility aliases (existing app) */
+  --bg-main: var(--background);
+  --bg-elevated: var(--surface-muted);
+  --bg-glass: rgba(255, 255, 255, 0.8);
+  --text-primary: var(--foreground);
+  --text-muted: var(--muted-foreground);
+  --text-subtle: #8a97aa;
+  --accent-primary: var(--accent);
+  --accent-finance: var(--accent-secondary);
+  --accent-warning: var(--state-warning);
+  --accent-danger: var(--state-error);
+  --accent-success: var(--state-success);
+  --border-subtle: var(--border);
+  --border-medium: #cdd8e5;
+  --color-warning: var(--state-warning);
+  --color-danger: var(--state-error);
 
   /* Shadows */
-  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.12);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-xs: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.1);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.14);
+  --shadow-accent: 0 8px 24px var(--accent-shadow);
+  --shadow-accent-lg: 0 16px 36px var(--accent-shadow-strong);
 
   /* Spacing (4px base) */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
   --space-12: 48px;
 
-  /* Border Radius */
+  /* Radius */
   --radius-none: 0;
-  --radius-sm: 6px;
-  --radius-md: 8px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
 
   /* Typography */
-  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  --font-mono: var(--font-sans);
-  --font-display: var(--font-sans);
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", "Fira Code", monospace;
+  --font-display: "Calistoga", Georgia, serif;
 
-  /* Font Sizes */
-  --text-xs: 0.75rem; /* 12px */
-  --text-sm: 0.875rem; /* 14px */
-  --text-base: 1rem; /* 16px */
-  --text-lg: 1.125rem; /* 18px */
-  --text-xl: 1.25rem; /* 20px */
-  --text-2xl: 1.5rem; /* 24px */
-  --text-3xl: 1.875rem; /* 30px */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
 
-  /* Font Weights */
   --font-normal: 400;
   --font-medium: 500;
   --font-semibold: 600;
   --font-bold: 700;
 
-  /* Line Heights */
-  --leading-tight: 1.25;
+  --leading-tight: 1.2;
   --leading-normal: 1.5;
-  --leading-relaxed: 1.75;
+  --leading-relaxed: 1.7;
 
-  /* Z-index scale */
+  /* Z-index */
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-modal: 1000;
@@ -85,9 +101,47 @@
   --bp-wide: 1440px;
 }
 
-/* Light theme variant (para futuro) */
-@media (prefers-color-scheme: light) {
-  :root {
-    /* Light theme would go here */
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0b1220;
+  --foreground: #e8eef8;
+  --surface: #111b2d;
+  --surface-muted: #0f1728;
+  --muted-foreground: #9bb0c7;
+  --border: #1f3047;
+  --ring: #4d7cff;
+  --accent: #4d7cff;
+  --accent-secondary: #6ea0ff;
+  --accent-soft: rgba(77, 124, 255, 0.16);
+  --accent-shadow: rgba(77, 124, 255, 0.32);
+  --accent-shadow-strong: rgba(77, 124, 255, 0.44);
+
+  --border-medium: #314563;
+  --bg-glass: rgba(12, 21, 35, 0.78);
+  --text-subtle: #7f96b2;
+
+  --shadow-xs: 0 1px 3px rgba(2, 6, 16, 0.34);
+  --shadow-sm: 0 2px 8px rgba(2, 6, 16, 0.42);
+  --shadow-md: 0 8px 24px rgba(2, 6, 16, 0.5);
+  --shadow-lg: 0 16px 36px rgba(2, 6, 16, 0.58);
+}
+
+:root[data-theme="calm"] {
+  color-scheme: light;
+  --background: #f7f8f4;
+  --foreground: #152033;
+  --surface: #ffffff;
+  --surface-muted: #edf2ee;
+  --muted-foreground: #5c6f6a;
+  --border: #d7e2db;
+  --ring: #2a6fb5;
+  --accent: #2a6fb5;
+  --accent-secondary: #5c9bd9;
+  --accent-soft: rgba(42, 111, 181, 0.11);
+  --accent-shadow: rgba(42, 111, 181, 0.24);
+  --accent-shadow-strong: rgba(42, 111, 181, 0.34);
+
+  --border-medium: #c6d5cc;
+  --bg-glass: rgba(255, 255, 255, 0.82);
+  --text-subtle: #83968f;
 }

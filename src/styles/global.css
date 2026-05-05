@@ -1,6 +1,6 @@
 /* Global Styles & Resets */
 
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @import "./tokens.css";
 @import "./animations.css";
@@ -15,6 +15,7 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  background-color: var(--bg-main);
 }
 
 body {
@@ -24,6 +25,7 @@ body {
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.24s ease, color 0.24s ease;
 }
 
 /* Headings */
@@ -41,11 +43,13 @@ h6 {
 h1 {
   font-size: var(--text-3xl);
   font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 h2 {
   font-size: var(--text-2xl);
   font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 h3 {
@@ -116,7 +120,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(46, 160, 67, 0.1);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* Scrollbar */

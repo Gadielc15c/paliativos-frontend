@@ -3,7 +3,7 @@
 ## Qué cambió
 
 - Diseño simplificado y limpio: tarjeta única centrada, sin bloques narrativos laterales ni líneas decorativas.
-- Concepto visual sereno: fondo cálido, dos masas de luz suaves y círculo de respiración en segundo plano.
+- Concepto visual sereno: fondo cálido, tres masas de luz suaves, círculo de respiración y partículas translúcidas de deriva lenta.
 - Estética premium serena: vidrio/cristal, profundidad 3D sutil en tarjeta y sombras controladas.
 - Estados explícitos de formulario:
   - Banner de estado `info` durante autenticación.
