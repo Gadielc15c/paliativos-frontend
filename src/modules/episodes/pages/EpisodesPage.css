@@ -1,0 +1,75 @@
+.episodes-edit-panel {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgba(var(--surface-rgb), var(--ui-glass-opacity));
+  display: grid;
+  gap: var(--space-3);
+}
+
+.episodes-edit-panel h3 {
+  margin: 0;
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
+}
+
+.episodes-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.episodes-edit-panel label {
+  display: grid;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.episodes-edit-panel input,
+.episodes-edit-panel select,
+.episodes-edit-panel textarea {
+  height: 38px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  padding: 0 var(--space-2);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+.episodes-edit-panel textarea {
+  min-height: 92px;
+  padding: var(--space-2);
+  resize: vertical;
+}
+
+.episodes-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.episodes-edit-message {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.episodes-edit-message.success {
+  color: var(--accent-success);
+}
+
+.episodes-edit-message.error {
+  color: var(--accent-danger);
+}
+
+@media (max-width: 640px) {
+  .episodes-edit-grid {
+    grid-template-columns: 1fr;
+  }
+}

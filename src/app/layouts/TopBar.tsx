@@ -1,11 +1,14 @@
 import { useAppStore } from "../store/useAppStore";
 import { User, LogOut, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { clearSession } from "../../services/auth";
 
 export default function TopBar() {
-  const { user, toggleSidebarMobile } = useAppStore();
+  const { user, toggleSidebarMobile, setUser, setPermissions } = useAppStore();
   const [showMenu, setShowMenu] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
   const roleLabel =
     user?.role === "admin"
       ? "Administrador"
@@ -30,6 +33,18 @@ export default function TopBar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleOpenSession = () => {
+    setShowMenu(false);
+    navigate("/config");
+  };
+
+  const handleLogout = () => {
+    clearSession();
+    setPermissions([]);
+    setUser(null);
+    setShowMenu(false);
+  };
 
   return (
     <header className="top-bar">
@@ -61,11 +76,11 @@ export default function TopBar() {
           </button>
 	          {showMenu && (
 	            <div className="top-bar-dropdown">
-	              <button type="button" className="top-bar-dropdown-item">
+	              <button type="button" className="top-bar-dropdown-item" onClick={handleOpenSession}>
 	                <User size={16} /> Mi sesión
 	              </button>
 
-	              <button type="button" className="top-bar-dropdown-item logout">
+	              <button type="button" className="top-bar-dropdown-item logout" onClick={handleLogout}>
 	                <LogOut size={16} /> Cerrar sesión
               </button>
             </div>

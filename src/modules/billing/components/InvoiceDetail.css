@@ -149,3 +149,48 @@
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
+
+.invoice-detail-edit {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.invoice-detail-edit label {
+  display: grid;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.invoice-detail-edit select,
+.invoice-detail-edit textarea {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+.invoice-detail-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.invoice-detail-feedback {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.invoice-detail-feedback.success {
+  color: var(--accent-success);
+}
+
+.invoice-detail-feedback.error {
+  color: var(--accent-danger);
+}

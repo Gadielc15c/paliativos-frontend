@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Empty, Loading, Error } from "../../../components/states/StateContainers";
 import Badge from "../../../components/common/Badge";
+import Button from "../../../components/common/Button";
 import type { InvoiceContract } from "../../../types/contracts";
 import { formatDate, formatCurrency } from "../../../utils/format";
 import "./InvoiceDetail.css";
@@ -9,6 +11,10 @@ interface InvoiceDetailProps {
   isLoading: boolean;
   isError: boolean;
   onRetry: () => void;
+  onUpdateInvoice?: (payload: {
+    status: "draft" | "issued" | "partially_paid" | "paid" | "cancelled";
+    notes: string | null;
+  }) => Promise<void>;
 }
 
 const getStatusVariant = (status: string): "success" | "warning" | "error" | "info" => {
@@ -31,10 +37,56 @@ export default function InvoiceDetail({
   isLoading,
   isError,
   onRetry,
+  onUpdateInvoice,
 }: InvoiceDetailProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [statusDraft, setStatusDraft] =
+    useState<"draft" | "issued" | "partially_paid" | "paid" | "cancelled">("draft");
+  const [notesDraft, setNotesDraft] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!invoice) return;
+    setStatusDraft(invoice.status);
+    setNotesDraft(invoice.notes || "");
+    setSaveMessage(null);
+    setSaveError(null);
+    setIsEditing(false);
+  }, [invoice?.id]);
+
   if (isLoading) return <Loading />;
   if (isError) return <Error onRetry={onRetry} />;
   if (!invoice) return <Empty message="Selecciona una factura" />;
+
+  const handleSave = () => {
+    if (!onUpdateInvoice) return;
+
+    const run = async () => {
+      setIsSaving(true);
+      setSaveMessage(null);
+      setSaveError(null);
+      try {
+        await onUpdateInvoice({
+          status: statusDraft,
+          notes: notesDraft.trim() || null,
+        });
+        setSaveMessage("Factura actualizada.");
+        setIsEditing(false);
+      } catch (error) {
+        setSaveError(
+          error instanceof globalThis.Error
+            ? error.message
+            : "No se pudo actualizar factura."
+        );
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    void run();
+  };
 
   return (
     <div className="invoice-detail">
@@ -92,6 +144,76 @@ export default function InvoiceDetail({
             </div>
           ))
         )}
+      </div>
+
+      <div className="invoice-detail-summary">
+        <div className="summary-row">
+          <h3>Gestión</h3>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              setIsEditing((v) => !v);
+              setSaveMessage(null);
+              setSaveError(null);
+            }}
+          >
+            {isEditing ? "Cerrar edición" : "Editar factura"}
+          </Button>
+        </div>
+        {isEditing && (
+          <div className="invoice-detail-edit">
+            <label>
+              Estado
+              <select
+                value={statusDraft}
+                onChange={(event) =>
+                  setStatusDraft(
+                    event.target.value as
+                      | "draft"
+                      | "issued"
+                      | "partially_paid"
+                      | "paid"
+                      | "cancelled"
+                  )
+                }
+              >
+                <option value="draft">draft</option>
+                <option value="issued">issued</option>
+                <option value="partially_paid">partially_paid</option>
+                <option value="paid">paid</option>
+                <option value="cancelled">cancelled</option>
+              </select>
+            </label>
+            <label>
+              Notas
+              <textarea
+                rows={3}
+                value={notesDraft}
+                onChange={(event) => setNotesDraft(event.target.value)}
+              />
+            </label>
+            <div className="invoice-detail-edit-actions">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setStatusDraft(invoice.status);
+                  setNotesDraft(invoice.notes || "");
+                  setSaveError(null);
+                  setSaveMessage(null);
+                }}
+              >
+                Revertir
+              </Button>
+              <Button size="sm" onClick={handleSave} isLoading={isSaving}>
+                Guardar
+              </Button>
+            </div>
+          </div>
+        )}
+        {saveMessage && <p className="invoice-detail-feedback success">{saveMessage}</p>}
+        {saveError && <p className="invoice-detail-feedback error">{saveError}</p>}
       </div>
 
       <div className="invoice-detail-meta">

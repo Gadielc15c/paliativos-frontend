@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Badge from "../../../components/common/Badge";
+import type { ApiError } from "../../../types/common";
 import Button from "../../../components/common/Button";
 import { Empty, Error, Loading } from "../../../components/states/StateContainers";
 import { episodesEndpoints, patientsEndpoints } from "../../../services/endpoints";
 import { formatDateTime } from "../../../utils/format";
+import "./EpisodesPage.css";
 
 const getStatusVariant = (
   status: string
@@ -27,6 +29,13 @@ export default function EpisodesPage() {
   const patientIdFilter = searchParams.get("patientId");
   const episodeIdFilter = searchParams.get("episodeId");
   const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | null>(episodeIdFilter);
+  const [editStatus, setEditStatus] = useState<"open" | "closed" | "cancelled">("open");
+  const [editDiagnosis, setEditDiagnosis] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
+  const [savingEpisode, setSavingEpisode] = useState(false);
+  const [editMessage, setEditMessage] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const {
     data,
@@ -64,6 +73,43 @@ export default function EpisodesPage() {
     const targetId = selectedEpisodeId || episodeIdFilter;
     return data?.episodes.find((episode) => episode.id === targetId) || data?.episodes[0] || null;
   }, [data, episodeIdFilter, selectedEpisodeId]);
+
+  useEffect(() => {
+    if (!selectedEpisode) return;
+    setEditStatus(selectedEpisode.status);
+    setEditDiagnosis(selectedEpisode.diagnosis || "");
+    setEditNotes(selectedEpisode.notes || "");
+    setEditEndDate(selectedEpisode.end_date ? selectedEpisode.end_date.slice(0, 10) : "");
+    setEditMessage(null);
+    setEditError(null);
+  }, [selectedEpisode?.id]);
+
+  const handleSaveEpisode = () => {
+    if (!selectedEpisode) return;
+
+    const run = async () => {
+      setSavingEpisode(true);
+      setEditMessage(null);
+      setEditError(null);
+      try {
+        await episodesEndpoints.update(selectedEpisode.id, {
+          status: editStatus,
+          diagnosis: editDiagnosis.trim() || null,
+          notes: editNotes.trim() || null,
+          end_date: editEndDate ? new Date(`${editEndDate}T00:00:00`).toISOString() : null,
+        });
+        await refetch();
+        setEditMessage("Episodio actualizado correctamente.");
+      } catch (error) {
+        const apiError = error as ApiError;
+        setEditError(apiError.message || "No se pudo actualizar el episodio.");
+      } finally {
+        setSavingEpisode(false);
+      }
+    };
+
+    void run();
+  };
 
   if (isLoading) {
     return <Loading />;
@@ -203,6 +249,73 @@ export default function EpisodesPage() {
                       </div>
                     </div>
                   </div>
+
+                  <section className="episodes-edit-panel">
+                    <h3>Editar episodio</h3>
+                    <div className="episodes-edit-grid">
+                      <label>
+                        Estado
+                        <select
+                          value={editStatus}
+                          onChange={(event) =>
+                            setEditStatus(event.target.value as "open" | "closed" | "cancelled")
+                          }
+                        >
+                          <option value="open">open</option>
+                          <option value="closed">closed</option>
+                          <option value="cancelled">cancelled</option>
+                        </select>
+                      </label>
+                      <label>
+                        Fecha de cierre
+                        <input
+                          type="date"
+                          value={editEndDate}
+                          onChange={(event) => setEditEndDate(event.target.value)}
+                        />
+                      </label>
+                    </div>
+                    <label>
+                      Diagnóstico
+                      <input
+                        value={editDiagnosis}
+                        onChange={(event) => setEditDiagnosis(event.target.value)}
+                        placeholder="Diagnóstico principal"
+                      />
+                    </label>
+                    <label>
+                      Notas
+                      <textarea
+                        rows={3}
+                        value={editNotes}
+                        onChange={(event) => setEditNotes(event.target.value)}
+                        placeholder="Notas clínicas del episodio"
+                      />
+                    </label>
+                    <div className="episodes-edit-actions">
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          if (!selectedEpisode) return;
+                          setEditStatus(selectedEpisode.status);
+                          setEditDiagnosis(selectedEpisode.diagnosis || "");
+                          setEditNotes(selectedEpisode.notes || "");
+                          setEditEndDate(
+                            selectedEpisode.end_date ? selectedEpisode.end_date.slice(0, 10) : ""
+                          );
+                          setEditMessage(null);
+                          setEditError(null);
+                        }}
+                      >
+                        Revertir
+                      </Button>
+                      <Button onClick={handleSaveEpisode} isLoading={savingEpisode}>
+                        Guardar cambios
+                      </Button>
+                    </div>
+                    {editMessage && <p className="episodes-edit-message success">{editMessage}</p>}
+                    {editError && <p className="episodes-edit-message error">{editError}</p>}
+                  </section>
                 </div>
               )}
             </div>

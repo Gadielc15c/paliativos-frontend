@@ -57,6 +57,10 @@ The container uses Nginx and proxies /api/ requests to http://backend:8000. If y
 - npm run build
 - npm run preview
 
+## Operational frontend docs
+
+- docs/frontend-interacciones-operativas.md
+
 ## Project structure
 
 ```

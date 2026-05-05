@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useBillingQuery, useInvoiceDetail } from "../hooks";
 import { InvoiceTable, InvoiceDetail } from "../components";
+import { billingEndpoints } from "../../../services/endpoints";
 import "./BillingPage.css";
 
 export default function BillingPage() {
@@ -42,6 +43,15 @@ export default function BillingPage() {
     }
   }, [invoiceIdFilter]);
 
+  const handleUpdateInvoice = async (payload: {
+    status: "draft" | "issued" | "partially_paid" | "paid" | "cancelled";
+    notes: string | null;
+  }) => {
+    if (!selectedInvoiceId) return;
+    await billingEndpoints.updateInvoice(selectedInvoiceId, payload);
+    await Promise.all([refetchInvoice(), refetchInvoices()]);
+  };
+
   return (
     <div className="billing-page">
       <div className="billing-list-column">
@@ -66,6 +76,7 @@ export default function BillingPage() {
           isLoading={invoiceLoading}
           isError={invoiceError}
           onRetry={refetchInvoice}
+          onUpdateInvoice={handleUpdateInvoice}
         />
       </div>
     </div>

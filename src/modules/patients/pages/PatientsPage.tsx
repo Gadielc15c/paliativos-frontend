@@ -28,12 +28,23 @@ export default function PatientsPage() {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showEpisodeForm, setShowEpisodeForm] = useState(false);
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+  const [showNotesForm, setShowNotesForm] = useState(false);
   const [episodeForm, setEpisodeForm] = useState({
     episode_type: "Seguimiento",
     diagnosis: "",
     notes: "",
     start_date: "",
   });
+  const [invoiceForm, setInvoiceForm] = useState({
+    issue_date: "",
+    insurer_name: "",
+    item_description: "",
+    item_quantity: "1",
+    item_unit_price: "",
+    notes: "",
+  });
+  const [notesDraft, setNotesDraft] = useState("");
 
   const effectiveSelectedPatientId = selectedPatientId || initialPatientId;
 
@@ -112,11 +123,24 @@ export default function PatientsPage() {
     setSearchParams(next, { replace: true });
     setActionMessage(null);
     setActionError(null);
+    setShowInvoiceForm(false);
+    setShowNotesForm(false);
+    setInvoiceForm({
+      issue_date: "",
+      insurer_name: "",
+      item_description: "",
+      item_quantity: "1",
+      item_unit_price: "",
+      notes: "",
+    });
+    setNotesDraft("");
   };
 
   const handleRegisterEpisode = () => {
     if (!effectiveSelectedPatientId) return;
     setShowEpisodeForm((v) => !v);
+    setShowInvoiceForm(false);
+    setShowNotesForm(false);
     setActionMessage(null);
     setActionError(null);
   };
@@ -157,6 +181,36 @@ export default function PatientsPage() {
 
   const handleCreateInvoice = () => {
     if (!effectiveSelectedPatientId) return;
+    setShowInvoiceForm((v) => !v);
+    setShowEpisodeForm(false);
+    setShowNotesForm(false);
+    setActionMessage(null);
+    setActionError(null);
+    setInvoiceForm((previous) => ({
+      ...previous,
+      insurer_name: previous.insurer_name || selectedPatient?.insurer_name || "",
+    }));
+  };
+
+  const handleSubmitInvoice = () => {
+    if (!effectiveSelectedPatientId) return;
+
+    const quantity = Number(invoiceForm.item_quantity);
+    const unitPrice = Number(invoiceForm.item_unit_price);
+    const hasItem = invoiceForm.item_description.trim().length > 0;
+
+    if (!invoiceForm.issue_date) {
+      setActionError("Define la fecha de emisión de la factura.");
+      return;
+    }
+    if (hasItem && (!Number.isFinite(quantity) || quantity <= 0)) {
+      setActionError("La cantidad del item debe ser mayor a cero.");
+      return;
+    }
+    if (hasItem && (!Number.isFinite(unitPrice) || unitPrice <= 0)) {
+      setActionError("El precio unitario del item debe ser mayor a cero.");
+      return;
+    }
 
     const run = async () => {
       setActiveAction("invoice");
@@ -165,11 +219,29 @@ export default function PatientsPage() {
       try {
         const invoice = await billingEndpoints.createInvoice({
           patient_id: effectiveSelectedPatientId,
-          issue_date: new Date().toISOString(),
-          insurer_name: selectedPatient?.insurer_name || undefined,
-          notes: "Factura creada desde interfaz de pacientes",
+          date: new Date(`${invoiceForm.issue_date}T00:00:00`).toISOString(),
+          insurer_name: invoiceForm.insurer_name.trim() || selectedPatient?.insurer_name || null,
+          notes: invoiceForm.notes.trim() || null,
+          items: hasItem
+            ? [
+                {
+                  description: invoiceForm.item_description.trim(),
+                  quantity,
+                  unit_price: unitPrice,
+                },
+              ]
+            : undefined,
         });
         setActionMessage(`Factura creada: ${invoice.invoice_number}`);
+        setShowInvoiceForm(false);
+        setInvoiceForm({
+          issue_date: "",
+          insurer_name: selectedPatient?.insurer_name || "",
+          item_description: "",
+          item_quantity: "1",
+          item_unit_price: "",
+          notes: "",
+        });
         await refetchWorkspace();
         navigate(`/billing?patientId=${effectiveSelectedPatientId}&invoiceId=${invoice.id}`);
       } catch (error) {
@@ -185,25 +257,31 @@ export default function PatientsPage() {
 
   const handleUpdateData = () => {
     if (!effectiveSelectedPatientId || !selectedPatient) return;
+    setShowNotesForm((v) => !v);
+    setShowEpisodeForm(false);
+    setShowInvoiceForm(false);
+    setActionMessage(null);
+    setActionError(null);
+    setNotesDraft(selectedPatient.notes || "");
+  };
+
+  const handleSubmitNotes = () => {
+    if (!effectiveSelectedPatientId) return;
 
     const run = async () => {
       setActiveAction("update");
       setActionMessage(null);
       setActionError(null);
-
-      const nextNotes = selectedPatient.notes
-        ? `${selectedPatient.notes}\n[${new Date().toISOString()}] Actualizado desde UI`
-        : `[${new Date().toISOString()}] Actualizado desde UI`;
-
       try {
         await patientsEndpoints.update(effectiveSelectedPatientId, {
-          notes: nextNotes,
+          notes: notesDraft.trim() || null,
         });
         await Promise.all([refetchPatient(), refetchPatients()]);
-        setActionMessage(`Paciente ${effectiveSelectedPatientId} actualizado.`);
+        setShowNotesForm(false);
+        setActionMessage(`Notas del paciente ${effectiveSelectedPatientId} actualizadas.`);
       } catch (error) {
         const apiError = error as ApiError;
-        setActionError(apiError.message || "No se pudo actualizar paciente.");
+        setActionError(apiError.message || "No se pudo actualizar notas.");
       } finally {
         setActiveAction(null);
       }
@@ -409,6 +487,126 @@ export default function PatientsPage() {
                 isLoading={activeAction === "episode"}
               >
                 Crear episodio
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {showInvoiceForm && effectiveSelectedPatientId && (
+          <section className="patients-episode-form">
+            <h4 className="patients-episode-form-title">Nueva factura</h4>
+            <div className="patients-episode-form-row">
+              <label>
+                Fecha de emisión *
+                <input
+                  className="patients-episode-form-input"
+                  type="date"
+                  value={invoiceForm.issue_date}
+                  onChange={(e) => setInvoiceForm((f) => ({ ...f, issue_date: e.target.value }))}
+                />
+              </label>
+              <label>
+                Aseguradora
+                <input
+                  className="patients-episode-form-input"
+                  value={invoiceForm.insurer_name}
+                  onChange={(e) =>
+                    setInvoiceForm((f) => ({ ...f, insurer_name: e.target.value }))
+                  }
+                  placeholder="Nombre de aseguradora"
+                />
+              </label>
+            </div>
+            <div className="patients-episode-form-row">
+              <label>
+                Item (opcional)
+                <input
+                  className="patients-episode-form-input"
+                  value={invoiceForm.item_description}
+                  onChange={(e) =>
+                    setInvoiceForm((f) => ({ ...f, item_description: e.target.value }))
+                  }
+                  placeholder="Ej: Consulta de control"
+                />
+              </label>
+              <label>
+                Cantidad
+                <input
+                  className="patients-episode-form-input"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={invoiceForm.item_quantity}
+                  onChange={(e) =>
+                    setInvoiceForm((f) => ({ ...f, item_quantity: e.target.value }))
+                  }
+                />
+              </label>
+              <label>
+                Precio unitario
+                <input
+                  className="patients-episode-form-input"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={invoiceForm.item_unit_price}
+                  onChange={(e) =>
+                    setInvoiceForm((f) => ({ ...f, item_unit_price: e.target.value }))
+                  }
+                  placeholder="0.00"
+                />
+              </label>
+            </div>
+            <label>
+              Notas de facturación
+              <textarea
+                className="patients-episode-form-textarea"
+                rows={2}
+                value={invoiceForm.notes}
+                onChange={(e) => setInvoiceForm((f) => ({ ...f, notes: e.target.value }))}
+                placeholder="Notas internas de la factura..."
+              />
+            </label>
+            <div className="patients-episode-form-actions">
+              <Button variant="secondary" size="sm" onClick={() => setShowInvoiceForm(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => void handleSubmitInvoice()}
+                isLoading={activeAction === "invoice"}
+              >
+                Crear factura
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {showNotesForm && effectiveSelectedPatientId && (
+          <section className="patients-episode-form">
+            <h4 className="patients-episode-form-title">Editar notas del expediente</h4>
+            <label>
+              Notas
+              <textarea
+                className="patients-episode-form-textarea"
+                rows={4}
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                placeholder="Escribe observaciones clínicas o administrativas..."
+              />
+            </label>
+            <div className="patients-episode-form-actions">
+              <Button variant="secondary" size="sm" onClick={() => setShowNotesForm(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => void handleSubmitNotes()}
+                isLoading={activeAction === "update"}
+              >
+                Guardar notas
               </Button>
             </div>
           </section>
