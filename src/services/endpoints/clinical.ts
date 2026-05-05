@@ -51,6 +51,8 @@ export const prescriptionsEndpoints = {
     dosage?: string | null;
     instructions?: string | null;
     notes?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
   }) => {
     const response = await httpClient.post<PrescriptionRecord>("/prescriptions", data);
     return response.data;

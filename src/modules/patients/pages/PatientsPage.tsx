@@ -27,6 +27,13 @@ export default function PatientsPage() {
   );
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [showEpisodeForm, setShowEpisodeForm] = useState(false);
+  const [episodeForm, setEpisodeForm] = useState({
+    episode_type: "Seguimiento",
+    diagnosis: "",
+    notes: "",
+    start_date: "",
+  });
 
   const effectiveSelectedPatientId = selectedPatientId || initialPatientId;
 
@@ -109,6 +116,13 @@ export default function PatientsPage() {
 
   const handleRegisterEpisode = () => {
     if (!effectiveSelectedPatientId) return;
+    setShowEpisodeForm((v) => !v);
+    setActionMessage(null);
+    setActionError(null);
+  };
+
+  const handleSubmitEpisode = () => {
+    if (!effectiveSelectedPatientId) return;
 
     const run = async () => {
       setActiveAction("episode");
@@ -117,12 +131,17 @@ export default function PatientsPage() {
       try {
         const episode = await episodesEndpoints.create({
           patient_id: effectiveSelectedPatientId,
-          episode_type: "Seguimiento",
-          start_date: new Date().toISOString(),
-          notes: "Creado desde interfaz de pacientes",
+          episode_type: episodeForm.episode_type.trim() || "Seguimiento",
+          start_date: episodeForm.start_date
+            ? new Date(episodeForm.start_date).toISOString()
+            : new Date().toISOString(),
+          diagnosis: episodeForm.diagnosis.trim() || null,
+          notes: episodeForm.notes.trim() || null,
           status: "open",
         });
         setActionMessage(`Episodio creado: ${episode.id}`);
+        setShowEpisodeForm(false);
+        setEpisodeForm({ episode_type: "Seguimiento", diagnosis: "", notes: "", start_date: "" });
         await refetchWorkspace();
         navigate(`/episodes?patientId=${effectiveSelectedPatientId}&episodeId=${episode.id}`);
       } catch (error) {
@@ -336,6 +355,65 @@ export default function PatientsPage() {
             {actionError && <p className="patients-inline-feedback-error">{actionError}</p>}
           </section>
         )}
+
+        {showEpisodeForm && effectiveSelectedPatientId && (
+          <section className="patients-episode-form">
+            <h4 className="patients-episode-form-title">Nuevo episodio clínico</h4>
+            <div className="patients-episode-form-row">
+              <label>
+                Tipo de episodio
+                <input
+                  className="patients-episode-form-input"
+                  value={episodeForm.episode_type}
+                  onChange={(e) => setEpisodeForm((f) => ({ ...f, episode_type: e.target.value }))}
+                  placeholder="Ej: Seguimiento, Urgencia..."
+                />
+              </label>
+              <label>
+                Diagnóstico
+                <input
+                  className="patients-episode-form-input"
+                  value={episodeForm.diagnosis}
+                  onChange={(e) => setEpisodeForm((f) => ({ ...f, diagnosis: e.target.value }))}
+                  placeholder="Diagnóstico principal"
+                />
+              </label>
+              <label>
+                Fecha de inicio
+                <input
+                  className="patients-episode-form-input"
+                  type="date"
+                  value={episodeForm.start_date}
+                  onChange={(e) => setEpisodeForm((f) => ({ ...f, start_date: e.target.value }))}
+                />
+              </label>
+            </div>
+            <label>
+              Notas
+              <textarea
+                className="patients-episode-form-textarea"
+                rows={2}
+                value={episodeForm.notes}
+                onChange={(e) => setEpisodeForm((f) => ({ ...f, notes: e.target.value }))}
+                placeholder="Contexto clínico del episodio..."
+              />
+            </label>
+            <div className="patients-episode-form-actions">
+              <Button variant="secondary" size="sm" onClick={() => setShowEpisodeForm(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => void handleSubmitEpisode()}
+                isLoading={activeAction === "episode"}
+              >
+                Crear episodio
+              </Button>
+            </div>
+          </section>
+        )}
+
         <PatientProfile
           profile={patientProfile ?? null}
           isLoading={patientLoading}

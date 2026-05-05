@@ -423,3 +423,133 @@
 .patient-profile-financial-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+
+/* ── Add button ───────────────────────────────── */
+.patient-profile-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.patient-profile-add-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-primary, #2563eb);
+  color: var(--accent-primary, #2563eb);
+}
+
+/* ── Inline forms ─────────────────────────────── */
+.patient-profile-inline-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  margin-bottom: var(--space-2);
+}
+
+.patient-profile-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+
+.patient-profile-inline-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.patient-profile-form-input,
+.patient-profile-form-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.patient-profile-form-input:focus,
+.patient-profile-form-select:focus {
+  outline: none;
+  border-color: var(--accent-primary, #2563eb);
+}
+
+.patient-profile-form-textarea {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+.patient-profile-form-textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary, #2563eb);
+}
+
+.patient-profile-form-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.patient-profile-form-error {
+  color: var(--color-error, #dc2626);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.patient-profile-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.patient-profile-form-submit {
+  padding: var(--space-2) var(--space-4);
+  background: var(--accent-primary, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.patient-profile-form-submit:hover:not(:disabled) {
+  background: var(--accent-hover, #1d4ed8);
+}
+
+.patient-profile-form-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
