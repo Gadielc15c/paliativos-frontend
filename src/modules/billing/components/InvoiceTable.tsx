@@ -45,41 +45,31 @@ export default function InvoiceTable({
       <div className="invoice-table-header">
         <h2>Facturas ({invoices.length})</h2>
       </div>
-
-      <table className="invoice-table">
-        <thead>
-          <tr>
-            <th>Factura</th>
-            <th>Paciente</th>
-            <th>Doctor</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th>Saldo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {invoices.map((invoice) => (
-            <tr
-              key={invoice.id}
-              className={`invoice-row ${selectedId === invoice.id ? "selected" : ""}`}
-              onClick={() => onSelect(invoice.id)}
-            >
-              <td className="mono">{invoice.invoiceNumber}</td>
-              <td>{invoice.patientName || invoice.patientId}</td>
-              <td>{invoice.doctorName || invoice.doctorId}</td>
-              <td className="mono">{formatCurrency(invoice.total)}</td>
-              <td>
-                <Badge variant={getStatusVariant(invoice.status)}>
-                  {invoice.status.toUpperCase()}
-                </Badge>
-              </td>
-              <td className={`mono ${invoice.balance > 0 ? "pending" : "paid"}`}>
-                {formatCurrency(invoice.balance)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="invoice-list">
+        {invoices.map((invoice) => (
+          <button
+            key={invoice.id}
+            type="button"
+            className={`invoice-list-item ${selectedId === invoice.id ? "selected" : ""}`}
+            onClick={() => onSelect(invoice.id)}
+          >
+            <div className="invoice-list-top">
+              <strong className="invoice-list-number">{invoice.invoiceNumber}</strong>
+              <Badge variant={getStatusVariant(invoice.status)}>
+                {invoice.status.toUpperCase()}
+              </Badge>
+            </div>
+            <div className="invoice-list-patient">{invoice.patientName || invoice.patientId}</div>
+            <div className="invoice-list-meta">
+              <span>Doctor: {invoice.doctorName || invoice.doctorId}</span>
+              <span>Total: {formatCurrency(invoice.total)}</span>
+              <span className={invoice.balance > 0 ? "pending" : "paid"}>
+                Saldo: {formatCurrency(invoice.balance)}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

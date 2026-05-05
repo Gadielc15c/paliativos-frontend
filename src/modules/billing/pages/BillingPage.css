@@ -1,6 +1,6 @@
 .billing-page {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(340px, 42%) minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   gap: 0;
@@ -36,24 +36,45 @@
   border-left: 1px solid var(--border-subtle);
 }
 
+.billing-detail-mobile-actions {
+  display: none;
+  margin-bottom: var(--space-3);
+}
+
 /* Tablet: Stack layout */
 @media (max-width: 1024px) {
   .billing-page {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
-    overflow: visible;
+    overflow: hidden;
   }
 
   .billing-list-column {
     border-right: none;
-    max-height: 42vh;
-    min-height: 260px;
+    max-height: none;
+    min-height: 0;
   }
 
   .billing-detail-column {
     border-left: none;
-    border-top: 1px solid var(--border-subtle);
-    min-height: 320px;
+    border-top: none;
+    min-height: 0;
+  }
+
+  .billing-page:not(.detail-open) .billing-detail-column {
+    display: none;
+  }
+
+  .billing-page.detail-open .billing-list-column {
+    display: none;
+  }
+
+  .billing-page.detail-open .billing-detail-column {
+    display: flex;
+    overflow-y: auto;
+  }
+
+  .billing-detail-mobile-actions {
+    display: block;
   }
 }
 
@@ -62,19 +83,30 @@
   .billing-page {
     display: flex;
     flex-direction: column;
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .billing-list-column {
-    max-height: 36vh;
-    min-height: 240px;
+    max-height: none;
+    min-height: 0;
   }
 
   .billing-detail-column {
-    min-height: 300px;
+    min-height: 0;
     padding: var(--space-3);
-    overflow-y: auto;
+  }
+
+  .billing-page:not(.detail-open) .billing-detail-column {
+    display: none;
+  }
+
+  .billing-page.detail-open .billing-list-column {
+    display: none;
+  }
+
+  .billing-page.detail-open .billing-detail-column {
+    display: flex;
   }
 }

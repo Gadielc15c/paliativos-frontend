@@ -14,11 +14,84 @@
 }
 
 .invoice-table-header h2 {
-  font-size: var(--text-lg);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
   margin: 0;
+  font-size: var(--text-lg);
   font-family: var(--font-mono);
+}
+
+.invoice-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.invoice-list-item {
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align: left;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  cursor: pointer;
+  display: grid;
+  gap: var(--space-2);
+  transition: all 0.2s ease;
+}
+
+.invoice-list-item:hover {
+  border-left-color: var(--accent-primary);
+  border-color: color-mix(in srgb, var(--accent-primary) 30%, var(--border-subtle));
+  box-shadow: var(--shadow-sm);
+}
+
+.invoice-list-item.selected {
+  border-left-color: var(--accent-primary);
+  border-color: color-mix(in srgb, var(--accent-primary) 48%, var(--border-subtle));
+  background:
+    linear-gradient(
+      125deg,
+      color-mix(in srgb, var(--accent-primary) 9%, transparent),
+      color-mix(in srgb, var(--accent-secondary) 6%, transparent)
+    );
+}
+
+.invoice-list-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.invoice-list-number {
+  font-family: var(--font-mono);
+  color: var(--accent-finance);
+  font-size: var(--text-sm);
+}
+
+.invoice-list-patient {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+.invoice-list-meta {
+  display: grid;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.invoice-list-meta .pending {
+  color: var(--accent-warning);
+  font-weight: var(--font-semibold);
+}
+
+.invoice-list-meta .paid {
+  color: var(--accent-success);
+  font-weight: var(--font-semibold);
 }
 
 @media (max-width: 768px) {
@@ -26,93 +99,7 @@
     padding: var(--space-3);
   }
 
-  .invoice-table-header h2 {
-    font-size: var(--text-base);
+  .invoice-list {
+    padding: var(--space-2);
   }
-}
-
-.invoice-table {
-  flex: 1;
-  overflow-y: auto;
-  border-collapse: collapse;
-  font-size: var(--text-sm);
-}
-
-.invoice-table thead {
-  position: sticky;
-  top: 0;
-  background-color: var(--bg-elevated);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.invoice-table th {
-  padding: var(--space-2) var(--space-3);
-  text-align: left;
-  font-weight: var(--font-semibold);
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  font-size: var(--text-xs);
-  letter-spacing: 0.3px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-@media (max-width: 768px) {
-  .invoice-table th {
-    font-size: 10px;
-    padding: var(--space-1) var(--space-2);
-  }
-
-  /* Hide columns on mobile */
-  .invoice-table th:nth-child(n + 4) {
-    display: none;
-  }
-}
-
-.invoice-row {
-  border-left: 3px solid transparent;
-  border-bottom: 1px solid var(--border-subtle);
-  transition: all 0.2s;
-  cursor: pointer;
-  animation: slideInLeft 0.3s ease-out backwards;
-}
-
-.invoice-row:hover {
-  border-left-color: var(--accent-primary);
-  background-color: var(--bg-elevated);
-}
-
-.invoice-row.selected {
-  border-left-color: var(--accent-primary);
-  background-color: var(--bg-elevated);
-  box-shadow: inset 0 0 8px rgba(9, 105, 218, 0.1);
-}
-
-.invoice-row td {
-  padding: var(--space-2) var(--space-3);
-  color: var(--text-primary);
-}
-
-@media (max-width: 768px) {
-  .invoice-row td {
-    padding: var(--space-1) var(--space-2);
-    font-size: 12px;
-  }
-
-  .invoice-row td:nth-child(n + 4) {
-    display: none;
-  }
-}
-
-.invoice-row td.mono {
-  font-family: var(--font-mono);
-  color: var(--accent-finance);
-}
-
-.invoice-row td.pending {
-  color: var(--accent-warning);
-}
-
-.invoice-row td.paid {
-  color: var(--accent-success);
 }

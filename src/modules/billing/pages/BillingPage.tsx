@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useBillingQuery, useInvoiceDetail } from "../hooks";
 import { InvoiceTable, InvoiceDetail } from "../components";
 import { billingEndpoints } from "../../../services/endpoints";
+import Button from "../../../components/common/Button";
 import "./BillingPage.css";
 
 export default function BillingPage() {
@@ -71,7 +72,7 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="billing-page">
+    <div className={`billing-page ${selectedInvoiceId ? "detail-open" : ""}`}>
       <div className="billing-list-column">
         {patientIdFilter && (
           <div className="billing-filter-banner">
@@ -89,6 +90,15 @@ export default function BillingPage() {
       </div>
 
       <div className="billing-detail-column">
+        <div className="billing-detail-mobile-actions">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setSelectedInvoiceId(null)}
+          >
+            Volver a facturas
+          </Button>
+        </div>
         <InvoiceDetail
           invoice={selectedInvoice}
           isLoading={invoiceLoading}
