@@ -1,5 +1,5 @@
 import { FormEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Loader, LogIn, AlertTriangle, HeartPulse, Mail, Lock } from "lucide-react";
+import { Loader, LogIn, AlertTriangle, HeartPulse, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import gsap from "gsap";
 import { login, restoreSession } from "../../services/auth";
 import type { AuthSession } from "../../services/auth";
@@ -29,8 +29,11 @@ const BACKGROUND_PARTICLES = [
 export function LoginPage({ onSuccess }: LoginPageProps) {
   const pageRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLFormElement | null>(null);
+  const introHeartRef = useRef<HTMLDivElement | null>(null);
+  const brandMarkRef = useRef<HTMLDivElement | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -91,19 +94,53 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       return;
     }
     const t = (duration: number) => duration * motionFactor;
+    const introHeart = introHeartRef.current;
+    const brandMark = brandMarkRef.current;
+    const heartShift = { x: 0, y: 0 };
+    if (introHeart && brandMark) {
+      const introBounds = introHeart.getBoundingClientRect();
+      const brandBounds = brandMark.getBoundingClientRect();
+      heartShift.x =
+        brandBounds.left + brandBounds.width / 2 - (introBounds.left + introBounds.width / 2);
+      heartShift.y =
+        brandBounds.top + brandBounds.height / 2 - (introBounds.top + introBounds.height / 2);
+    }
 
     const ctx = gsap.context(() => {
       const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
       const sparkles = gsap.utils.toArray<HTMLElement>(".login-logo-sparkle");
       intro
         .from(".login-card", { y: 20, opacity: 0, duration: t(0.58) }, 0)
-        .from(".login-brand", { y: 10, opacity: 0, duration: t(0.24) }, 0.08)
-        .from(".login-brand-mark", { scale: 0.7, rotate: -14, duration: t(0.28), ease: "back.out(1.8)" }, 0.08)
+        .fromTo(".login-card-intro", { opacity: 0 }, { opacity: 1, duration: t(0.12) }, 0.08)
+        .fromTo(
+          ".login-intro-heart",
+          { scale: 0.62, opacity: 0, rotate: -8 },
+          { scale: 1, opacity: 1, rotate: 0, duration: t(0.34), ease: "back.out(1.7)" },
+          0.1
+        )
+        .to(
+          ".login-intro-heart",
+          {
+            x: heartShift.x,
+            y: heartShift.y,
+            scale: 0.2,
+            duration: t(0.62),
+            ease: "power3.inOut",
+          },
+          0.36
+        )
+        .to(".login-card-intro", { opacity: 0, duration: t(0.2) }, 0.72)
+        .from(".login-brand", { y: 10, opacity: 0, duration: t(0.22) }, 0.68)
+        .from(
+          ".login-brand-mark",
+          { scale: 0.7, rotate: -14, duration: t(0.22), ease: "back.out(1.8)" },
+          0.7
+        )
         .fromTo(
           ".login-brand-mark svg",
           { scale: 0.8 },
           { scale: 1.06, yoyo: true, repeat: 1, duration: t(0.18), ease: "power2.inOut" },
-          0.16
+          0.78
         )
         .fromTo(
           sparkles,
@@ -117,7 +154,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
             stagger: t(0.02),
             ease: "power2.out",
           },
-          0.2
+          0.82
         )
         .to(
           sparkles,
@@ -128,12 +165,12 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
             stagger: t(0.015),
             ease: "power2.in",
           },
-          0.42
+          1.02
         )
-        .from(".login-title", { y: 12, opacity: 0, duration: t(0.35) }, 0.14)
-        .from(".login-subtitle", { y: 8, opacity: 0, duration: t(0.3) }, 0.18)
-        .from(".login-field", { y: 8, opacity: 0, duration: t(0.3), stagger: t(0.06) }, 0.28)
-        .call(() => setSubmitVisible(true), [], 0.72);
+        .from(".login-title", { y: 12, opacity: 0, duration: t(0.35) }, 0.48)
+        .from(".login-subtitle", { y: 8, opacity: 0, duration: t(0.3) }, 0.52)
+        .from(".login-field", { y: 8, opacity: 0, duration: t(0.3), stagger: t(0.06) }, 0.58)
+        .call(() => setSubmitVisible(true), [], 1.08);
 
       gsap.to(".breath-circle", {
         scale: 1.2,
@@ -362,8 +399,14 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       </div>
 
       <form className="login-card" onSubmit={handleSubmit} ref={cardRef} noValidate>
+        <div className="login-card-intro" aria-hidden>
+          <div className="login-intro-heart" ref={introHeartRef}>
+            <HeartPulse />
+          </div>
+        </div>
+
         <div className="login-brand">
-          <div className="login-brand-mark" aria-hidden>
+          <div className="login-brand-mark" aria-hidden ref={brandMarkRef}>
             <HeartPulse size={18} />
             <span className="login-logo-sparkle" data-tx="-28" data-ty="-20" />
             <span className="login-logo-sparkle" data-tx="-8" data-ty="-30" />
@@ -429,7 +472,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           <div className={`login-input-wrap${fieldErrors.password ? " is-invalid" : ""}`}>
             <Lock size={16} className="login-input-icon" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
               value={password}
@@ -445,6 +488,18 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
               disabled={submitting}
               placeholder="Ingresa tu contraseña"
             />
+            <button
+              type="button"
+              className="login-password-toggle"
+              onClick={() => setShowPassword((value) => !value)}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              disabled={submitting}
+            >
+              <span key={showPassword ? "visible" : "hidden"} className="login-password-icon">
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </span>
+            </button>
           </div>
           {fieldErrors.password && (
             <span id="password-error" className="login-field-error">
