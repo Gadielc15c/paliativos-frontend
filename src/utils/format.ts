@@ -23,15 +23,15 @@ export const formatRelativeTime = (date: string | Date) => {
   });
 };
 
-export const formatCurrency = (amount: number, currency = "USD") => {
-  return new Intl.NumberFormat("es-AR", {
+export const formatCurrency = (amount: number, currency = "DOP") => {
+  return new Intl.NumberFormat("es-DO", {
     style: "currency",
     currency,
   }).format(amount);
 };
 
 export const formatNumber = (num: number, decimals = 2) => {
-  return new Intl.NumberFormat("es-AR", {
+  return new Intl.NumberFormat("es-DO", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(num);

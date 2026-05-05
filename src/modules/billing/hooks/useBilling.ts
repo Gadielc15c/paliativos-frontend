@@ -28,8 +28,8 @@ export function useBillingQuery(
           await Promise.all([
             billingEndpoints.listInvoices(page, limit, patientId || undefined),
             financeEndpoints.listPayments(1, 100),
-            patientsEndpoints.list(1, 500),
-            doctorsEndpoints.list(1, 500, true),
+            patientsEndpoints.list(1, 100),
+            doctorsEndpoints.list(1, 100, true),
           ]);
 
         const patientsById = createNameLookup(patientsPage.items);
@@ -61,8 +61,8 @@ export function useInvoiceDetail(
         const [invoice, paymentsPage, patientsPage, doctorsPage] = await Promise.all([
           billingEndpoints.getInvoice(invoiceId),
           financeEndpoints.listPayments(1, 100, invoiceId),
-          patientsEndpoints.list(1, 500),
-          doctorsEndpoints.list(1, 500, true),
+          patientsEndpoints.list(1, 100),
+          doctorsEndpoints.list(1, 100, true),
         ]);
 
         const patientsById = createNameLookup(patientsPage.items);

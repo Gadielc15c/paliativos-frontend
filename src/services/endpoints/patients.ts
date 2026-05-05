@@ -2,10 +2,12 @@
 import { httpClient } from "../http";
 import type { ClinicalEventRecord, PageResponse, PatientProfileResponse, PatientRecord } from "../../types/api";
 
+const normalizePageSize = (pageSize: number) => Math.min(100, Math.max(1, pageSize));
+
 export const patientsEndpoints = {
   list: async (page = 1, pageSize = 50) => {
     const response = await httpClient.get<PageResponse<PatientRecord>>("/patients", {
-      params: { page, page_size: pageSize },
+      params: { page, page_size: normalizePageSize(pageSize) },
     });
     return response.data;
   },

@@ -53,7 +53,7 @@ export default function SecretariesPage() {
 
   const { data: doctorsPage } = useQuery({
     queryKey: ["secretaries", "doctors"],
-    queryFn: () => doctorsEndpoints.list(1, 200, true),
+    queryFn: () => doctorsEndpoints.list(1, 100, true),
   });
 
   const doctors = doctorsPage?.items || [];
