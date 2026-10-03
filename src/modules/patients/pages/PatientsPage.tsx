@@ -11,6 +11,8 @@ import { usePermission } from "../../../utils/usePermission";
 import type { AlertType } from "../../../types/dashboard";
 import { usePatients } from "../hooks";
 import Button from "../../../components/common/Button";
+import { openAssistant } from "../../assistant/store";
+import { openNewPatient } from "../quick/store";
 import ActionBar from "../../../components/common/ActionBar";
 import {
   billingEndpoints,
@@ -47,6 +49,7 @@ export default function PatientsPage() {
   const listFilter = searchParams.get("filter") as AlertType | null;
   const canWriteClinical = usePermission("clinical:write");
   const canBilling = usePermission("billing:read");
+  const canCreatePatient = usePermission("patients:write");
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [patientFocusMode, setPatientFocusMode] = useState(initialFocusMode);
   const [searchQuery, setSearchQuery] = useState("");
@@ -434,7 +437,12 @@ export default function PatientsPage() {
       primary={primaryAction}
       secondary={secondaryActions}
       inlineLimit={0}
-    />
+    >
+      <button type="button" className="patient-ask-ai glow-border" title="Preguntar al asistente sobre este paciente"
+        onClick={() => openAssistant({ patientId: effectiveSelectedPatientId, patientName: selectedPatient?.full_name ?? patientProfile?.patient.full_name ?? null })}>
+        <span aria-hidden="true">✦</span><span className="patient-ask-ai-full">Preguntar al asistente</span><span className="patient-ask-ai-short" aria-hidden="true">Preguntar</span>
+      </button>
+    </ActionBar>
   ) : null;
 
   const profileForms = (
@@ -627,8 +635,15 @@ export default function PatientsPage() {
     >
       <aside className="patients-list-column" aria-label="Listado de pacientes">
         <header className="patients-list-head">
-          <h1 className="patients-list-title">Pacientes</h1>
-          {patientCount > 0 && <span className="patients-list-count">{patientCount} en seguimiento</span>}
+          <div className="patients-list-head-copy">
+            <h1 className="patients-list-title">Pacientes</h1>
+            {patientCount > 0 && <span className="patients-list-count">{patientCount} en seguimiento</span>}
+          </div>
+          {canCreatePatient && (
+            <Button variant="primary" size="sm" className="glow-border patients-new" onClick={() => openNewPatient()}>
+              <Plus size={18} aria-hidden="true" /><span>Nuevo paciente</span>
+            </Button>
+          )}
         </header>
         {filterInfo && (
           <div className="patients-filter" aria-live="polite">
@@ -655,6 +670,7 @@ export default function PatientsPage() {
         <PatientList
           patients={visiblePatients}
           notes={filterInfo?.notes}
+          emptyAction={!filterInfo && !searchQuery && canCreatePatient ? { label: "Nuevo paciente", onClick: () => openNewPatient(), icon: <Plus size={18} aria-hidden="true" /> } : undefined}
           emptyMessage={filterInfo ? (filterInfo.loaded ? "Ningún paciente coincide con esta alerta. Quita el filtro para ver a todos." : undefined) : searchQuery ? `Ningún paciente coincide con «${searchQuery}». Revisa el nombre o el documento.` : undefined}
           isLoading={patientsLoading || (!!filterInfo && alertsQuery.isLoading)}
           isError={patientsError}

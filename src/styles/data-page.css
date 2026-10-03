@@ -54,6 +54,8 @@
 :root body .segmented-item:active:not(:disabled) { transform: none; opacity: .7; }
 .segmented-item[aria-selected="true"] { font-weight: 600; }
 .segmented-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg-short { display: none; }
+@media (max-width: 480px) { .seg-full { display: none; } .seg-short { display: inline; } }
 .segmented-badge { flex: none; min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: .75rem; font-weight: 600; line-height: 20px; text-align: center; }
 
 /* ---- Grouped sections ---- */

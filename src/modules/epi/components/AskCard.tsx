@@ -155,7 +155,7 @@ export default function AskCard({ inputRef, initialQuestion, onOpenCode }: { inp
       <div className="data-card-header">
         <div className="epi-ask-heading">
           <h2 id="epi-ask-title" className="data-card-title epi-ask-title">Pregúntale a tus datos <AiPill /></h2>
-          <p className="data-card-subtitle">Escribe una pregunta en lenguaje natural. La IA elige la consulta; los números salen de tu base de datos.</p>
+          <p className="data-card-subtitle">Pregunta en lenguaje natural; los números salen de tu base de datos.</p>
         </div>
       </div>
       <div className="data-card-body epi-ask-body">

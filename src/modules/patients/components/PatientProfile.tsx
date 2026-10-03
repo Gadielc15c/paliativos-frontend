@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import SegmentedControl from "../../../components/common/SegmentedControl";
 import ActionMenu from "../../../components/common/ActionMenu";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, FilePlus2, Plus, Receipt, X } from "lucide-react";
+import { ChevronDown, ChevronRight, FilePlus2, Plus, Receipt, X } from "lucide-react";
 import Button from "../../../components/common/Button";
 import { useIsCompact } from "../../../components/common/useMediaQuery";
 import CodePill from "../../../components/clinical/CodePill";
@@ -100,6 +100,15 @@ export default function PatientProfile({
 }: PatientProfileProps) {
   const navigate = useNavigate();
   const [showAllAlerts, setShowAllAlerts] = useState(false);
+  // Long tabs: secondary sections start collapsed (one line with their count) to keep the ficha short.
+  const [openSecs, setOpenSecs] = useState<Set<string>>(() => new Set());
+  const [moreData, setMoreData] = useState(false);
+  const toggleSec = (k: string) => setOpenSecs((prev) => { const n = new Set(prev); if (n.has(k)) n.delete(k); else n.add(k); return n; });
+  const secHead = (k: string, title: string, meta: string) => (
+    <h3><button type="button" className="patient-profile-disclosure" aria-expanded={openSecs.has(k)} onClick={() => toggleSec(k)}>
+      <ChevronDown size={18} aria-hidden="true" className="patient-profile-disclosure-icon" /><span>{title}</span><span className="patient-profile-disclosure-meta">{meta}</span>
+    </button></h3>
+  );
   const compact = useIsCompact();
   const canClinical = usePermission("clinical:read");
   const canAi = usePermission("ai:use");
@@ -319,13 +328,18 @@ export default function PatientProfile({
           <InfoCard label="Sexo" value={label("sex", patient.gender)} />
           <InfoCard label="Alergias" value={allergies.length ? allergies.join(", ") : "Ninguna registrada"} />
           <InfoCard label="Medicación activa" value={active_prescriptions.length ? active_prescriptions.map((r) => r.medication).join(", ") : "Ninguna"} />
+          {moreData && <>
           <InfoCard label="Documento" value={patient.document_number} mono />
           <InfoCard label="Médico" value={patient.doctor_name || "—"} />
           <InfoCard label="Teléfono" value={patient.phone || "—"} auxiliary={patient.secondary_phone ? `Otro: ${patient.secondary_phone}` : undefined} />
           <InfoCard label="Aseguradora" value={patient.insurer_name || "—"} />
           <InfoCard label="Dirección" value={patient.address || "—"} />
           <InfoCard label="Última actualización" value={formatDate(patient.updated_at)} auxiliary={formatRelativeTime(patient.updated_at)} />
+          </>}
         </div>
+        <button type="button" className="patient-profile-more-data" aria-expanded={moreData} onClick={() => setMoreData((v) => !v)}>
+          {moreData ? "Ocultar contacto y datos administrativos" : "Ver contacto y datos administrativos"}
+        </button>
       </section>
       {patient.notes && (
         <section className="patient-profile-section">
@@ -341,10 +355,10 @@ export default function PatientProfile({
         <>
       <PatientTimeline patientId={patient.id} />
       {/* ── HISTORIAL MÉDICO ─────────────────────────── */}
-      <section className="patient-profile-section">
+      <section className="patient-profile-section" data-collapsed={!openSecs.has("conditions") || undefined}>
         <div className="patient-profile-section-head">
-          <h3>Historial médico</h3>
-          <button className="patient-profile-add-btn" onClick={() => { setShowConditionForm((v) => !v); }} type="button">
+          {secHead("conditions", "Historial médico", `${active_conditions.length} ${active_conditions.length === 1 ? "condición" : "condiciones"}`)}
+          <button className="patient-profile-add-btn" onClick={() => { setShowConditionForm((v) => !v); setOpenSecs((p) => new Set(p).add("conditions")); }} type="button">
             {showConditionForm ? <X size={18} /> : <Plus size={18} />}
             {showConditionForm ? "Cancelar" : "Agregar condición"}
           </button>
@@ -467,10 +481,10 @@ export default function PatientProfile({
         )}
       </section>
       {/* ── MEDICACIÓN ACTIVA ────────────────────────── */}
-      <section className="patient-profile-section">
+      <section className="patient-profile-section" data-collapsed={!openSecs.has("rx") || undefined}>
         <div className="patient-profile-section-head">
-          <h3>Medicación activa</h3>
-          <button className="patient-profile-add-btn" onClick={() => { setShowRxForm((v) => !v); }} type="button">
+          {secHead("rx", "Medicación activa", active_prescriptions.length ? active_prescriptions.map((r) => r.medication).join(", ") : "Ninguna")}
+          <button className="patient-profile-add-btn" onClick={() => { setShowRxForm((v) => !v); setOpenSecs((p) => new Set(p).add("rx")); }} type="button">
             {showRxForm ? <X size={18} /> : <Plus size={18} />}
             {showRxForm ? "Cancelar" : "Nueva prescripción"}
           </button>
@@ -565,10 +579,9 @@ export default function PatientProfile({
       </section>
       {/* ── RECONCILIACIONES ─────────────────────────── */}
       {reconciliations && reconciliations.length > 0 && (
-        <section className="patient-profile-section">
+        <section className="patient-profile-section" data-collapsed={!openSecs.has("recon") || undefined}>
           <div className="patient-profile-section-head">
-            <h3>Reconciliaciones de medicación</h3>
-            <span>{reconciliations.length} actas</span>
+            {secHead("recon", "Reconciliaciones de medicación", `${reconciliations.length} ${reconciliations.length === 1 ? "acta" : "actas"}`)}
           </div>
           <div className="patient-profile-reconciliation-list">
             {reconciliations.map((rec) => (
@@ -600,10 +613,9 @@ export default function PatientProfile({
         </section>
       )}
       {episodes.length > 0 && (
-        <section className="patient-profile-section">
+        <section className="patient-profile-section" data-collapsed={!openSecs.has("episodes") || undefined}>
           <div className="patient-profile-section-head">
-            <h3>Episodios anteriores</h3>
-            <span>Solo lectura · las visitas nuevas se registran como consulta</span>
+            {secHead("episodes", "Episodios anteriores", `${episodes.length} · solo lectura`)}
           </div>
           <div className="patient-profile-activity-list">
             {episodes.map((e) => (

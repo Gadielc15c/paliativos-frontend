@@ -27,16 +27,18 @@ function Tip({ active, label, payload }: TipProps) {
 }
 
 /** Three counts on one axis (same unit): 2px linear lines, hairline grid, crosshair tooltip. */
-export default function ActivityChart({ data }: { data: DashboardActivity }) {
+export default function ActivityChart({ data, height }: { data: DashboardActivity; height?: number }) {
   const compact = useIsCompact();
+  const max = Math.max(0, ...data.series.flatMap((r) => ACTIVITY_SERIES.map((s) => r[s.key])));
+  const axisWidth = Math.max(compact ? 32 : 40, fmt(max).length * 8 + 14);
   return (
-    <div className="home-chart" style={{ height: compact ? 220 : 260 }}>
+    <div className="home-chart" style={{ height: height ?? (compact ? 220 : 260) }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data.series} margin={{ top: 8, right: compact ? 4 : 12, bottom: 0, left: compact ? -8 : 0 }}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
           <XAxis dataKey="bucket" tickFormatter={(b) => bucketLabel(String(b))} tickLine={false} axisLine={{ stroke: "var(--chart-grid)" }}
             tick={{ fill: "var(--chart-axis)", fontSize: 12 }} interval="preserveStartEnd" minTickGap={compact ? 32 : 20} tickMargin={8} />
-          <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={compact ? 32 : 40} tickCount={compact ? 3 : 5}
+          <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={axisWidth} tickCount={compact ? 3 : 5}
             tick={{ fill: "var(--chart-axis)", fontSize: 12 }} tickFormatter={(v) => fmt(Number(v))} />
           <Tooltip content={<Tip />} cursor={{ stroke: "var(--chart-axis)", strokeWidth: 1 }} isAnimationActive={false} />
           {ACTIVITY_SERIES.map((s) => (

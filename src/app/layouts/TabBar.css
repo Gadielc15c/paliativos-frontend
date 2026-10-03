@@ -25,3 +25,5 @@
 .action-menu-layer.is-sheet .tab-bar-more .action-menu-item { justify-content: flex-start; gap: 16px; padding-inline: 20px; color: var(--foreground); }
 .action-menu-layer.is-sheet .tab-bar-more .action-menu-icon { display: inline-flex; color: var(--accent); }
 .action-menu-layer.is-sheet .tab-bar-more .action-menu-item.is-destructive, .action-menu-layer.is-sheet .tab-bar-more .action-menu-item.is-destructive .action-menu-icon { color: var(--danger-foreground); }
+.action-menu-layer.is-sheet .tab-bar-more .tab-bar-more-ai .action-menu-icon { color: var(--ai-foreground); }
+.action-menu-layer.is-sheet .tab-bar-more + .tab-bar-more { border-radius: 14px; }

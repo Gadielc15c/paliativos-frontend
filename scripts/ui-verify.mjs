@@ -9,6 +9,9 @@
  *   (d) small controls   – interactive controls shorter than 36px
  *   (e) page h-scroll    – document wider than the viewport
  *   (f) phone tables     – any visible <table> at 390px (phones get DataList cards)
+ *   (g) page too tall    – Inicio (home*) taller than 1.6× the viewport on desktop (≥ 1024px).
+ *                          Every route's full page height is also reported (in px and viewports)
+ *                          at each width, so excessive scroll is visible per screen.
  * Screenshots go to .ui-shots/. Exit code 1 when anything is found.
  *
  * Usage: npm run ui:verify                (dev server must be running on :5173)
@@ -70,6 +73,24 @@ const APP_ROUTES = [
   ["patient-history", "/patients?patientId=patient-1&focus=1&tab=history"],
   ["patient-consults", "/patients?patientId=patient-1&focus=1&tab=consults"],
   ["equipo", "/equipo"],
+  // Scroll pass: one analytics panel / epi view at a time.
+  ["home-panel-quality", "/?panel=calidad"],
+  ["home-panel-team", "/?panel=equipo"],
+  ["epi-view-trends", "/epidemiologia?view=tendencias"],
+  ["epi-view-distribution", "/epidemiologia?view=distribucion"],
+  ["epi-view-insights", "/epidemiologia?view=hallazgos"],
+  // Asistente (agent chat): DEV-only ?demo=chat preloads a conversation with every block and proposal state.
+  ["assistant-empty", "/asistente"],
+  ["assistant-chat", "/asistente?demo=chat"],
+  ["assistant-panel", "/?assistant=open"],
+  ["assistant-panel-chat", "/patients?assistant=open&demo=chat"],
+  ["assistant-secretary", "/asistente?role=secretary"],
+  // Nuevo paciente / Nueva consulta from anywhere (?quick= opens the sheet; &np=check shows validation + duplicate warning).
+  ["new-patient", "/patients?quick=new-patient"],
+  ["new-patient-check", "/patients?quick=new-patient&np=check"],
+  ["new-patient-secretary", "/?quick=new-patient&role=secretary"],
+  ["new-consultation", "/?quick=new-consultation"],
+  ["patients-empty", "/patients?data=empty"],
 ];
 
 function pages() {
@@ -99,6 +120,11 @@ function audit() {
       const cs = getComputedStyle(n);
       if (cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) === 0) return false;
       if (n.hasAttribute("inert") || n.getAttribute("aria-hidden") === "true") return false;
+      // Scrolled out of an inner scroller (chat log, sheet body): not on screen, not a sibling of the chrome above it.
+      if (n !== el && !n.classList.contains("app-layout-content-area") && /(auto|scroll|hidden)/.test(cs.overflowY)) {
+        const c = n.getBoundingClientRect(); const h = Math.min(r.bottom, c.bottom) - Math.max(r.top, c.top);
+        if (h < r.height - 1) return false; // cut by the scroller edge: mid-scroll, not a layout collision
+      }
     }
     return true;
   };
@@ -240,13 +266,16 @@ function audit() {
   return issues;
 }
 
-const LABELS = { overflow: "(a) text overflow", gap: "(b) crowded controls", serif: "(c) serif font", small: "(d) control < 36px", hscroll: "(e) page h-scroll", table: "(f) <table> on phone" };
+const LABELS = { overflow: "(a) text overflow", gap: "(b) crowded controls", serif: "(c) serif font", small: "(d) control < 36px", hscroll: "(e) page h-scroll", table: "(f) <table> on phone", tall: "(g) page too tall" };
+// Height budget (in viewports) per route-name prefix, desktop only. Inicio is the owner's "tenemos scroll excesivo" screen.
+const HEIGHT_BUDGET = [["home", 1.6]];
 
 async function main() {
   await mkdir(OUT, { recursive: true });
   const browser = await chromium.launch();
   const all = [];
   const errors = [];
+  const heights = []; // { page, width, theme, px, vh }
   let visits = 0;
   for (const theme of THEMES) {
     for (const width of WIDTHS) {
@@ -269,6 +298,11 @@ async function main() {
         const shot = `${width}-${theme}-${p.name}.png`;
         // Unroll the app shell (it scrolls internally) so the full-page shot shows every section.
         const unroll = await page.addStyleTag({ content: ".app-layout-container,.app-layout-main-content{height:auto!important}.app-layout-content-area{overflow:visible!important}.patients-list-column,.billing-list-column,.episodes-list{max-height:none!important}.preview-toolbar{display:none!important}.form-actions,.ai-review-bar{position:static!important}body{position:relative}.tab-bar{position:absolute!important}" });
+        const vh = page.viewportSize().height;
+        const px = await page.evaluate(() => Math.max(document.documentElement.scrollHeight, document.body.scrollHeight));
+        heights.push({ page: p.name, width, theme, px, vh: +(px / vh).toFixed(2) });
+        const budget = width >= 1024 && HEIGHT_BUDGET.find(([prefix]) => p.name === prefix || p.name.startsWith(`${prefix}-`));
+        if (budget && px > budget[1] * vh) issues.push({ type: "tall", el: "page", detail: `${px}px = ${(px / vh).toFixed(2)}× viewport > ${budget[1]}×` });
         await page.screenshot({ path: path.join(OUT, shot), fullPage: true });
         await unroll.evaluate((el) => el.remove());
         for (const i of issues) all.push({ ...i, page: p.name, width, theme, shot });
@@ -295,12 +329,24 @@ async function main() {
     for (const g of list.slice(0, 40)) console.log(`   [${g.page} @ ${[...g.where].join(",")}] ${g.el} — ${g.detail}`);
     if (list.length > 40) console.log(`   … ${list.length - 40} more (see .ui-shots/report.json)`);
   }
+  // Page heights (light theme; px and viewports), tallest first per width.
+  const light = heights.filter((h) => h.theme === (THEMES.includes("light") ? "light" : THEMES[0]) && !h.page.endsWith("-worst"));
+  if (light.length) {
+    console.log("\nPage height (demo data, viewports = px / viewport height):");
+    const names = [...new Set(light.map((h) => h.page))];
+    const ws = [...new Set(light.map((h) => h.width))].sort((a, b) => a - b);
+    console.log(`   ${"route".padEnd(28)}${ws.map((w) => `${w}px`.padStart(16)).join("")}`);
+    for (const n of names) {
+      const cells = ws.map((w) => { const h = light.find((x) => x.page === n && x.width === w); return (h ? `${h.px} (${h.vh.toFixed(1)}×)` : "—").padStart(16); });
+      console.log(`   ${n.padEnd(28)}${cells.join("")}`);
+    }
+  }
   if (errors.length) {
     console.log(`\nPage errors: ${errors.length}`);
     for (const e of [...new Set(errors)].slice(0, 10)) console.log("   " + e);
   }
   console.log(`\n${visits} page visits, ${visits} screenshots in .ui-shots/. Total issues: ${all.length}`);
-  await writeFile(path.join(OUT, "report.json"), JSON.stringify({ visits, total: all.length, issues: all, errors }, null, 2));
+  await writeFile(path.join(OUT, "report.json"), JSON.stringify({ visits, total: all.length, issues: all, errors, heights }, null, 2));
   process.exit(all.length ? 1 : 0);
 }
 

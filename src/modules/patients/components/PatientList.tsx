@@ -16,15 +16,17 @@ interface PatientListProps {
   /** Per-patient note from an alert filter (e.g. "hace 64 días"); replaces "Actualizado …". */
   notes?: Map<string, string>;
   emptyMessage?: string;
+  /** Next step for the empty list (e.g. "Nuevo paciente"). */
+  emptyAction?: { label: string; onClick: () => void; icon?: React.ReactNode };
 }
 
 const getStatusVariant = (status: string): "success" | "warning" | "neutral" =>
   status === "active" ? "success" : status === "deceased" ? "warning" : "neutral";
 
-export default function PatientList({ patients, isLoading, isError, selectedId, onSelect, onRetry, notes, emptyMessage }: PatientListProps) {
+export default function PatientList({ patients, isLoading, isError, selectedId, onSelect, onRetry, notes, emptyMessage, emptyAction }: PatientListProps) {
   if (isLoading) return <Loading />;
   if (isError) return <Error message="No se pudo cargar la lista de pacientes." onRetry={onRetry} />;
-  if (!patients || patients.length === 0) return <Empty message={emptyMessage ?? "Aún no hay pacientes registrados. Cuando el equipo registre el primero aparecerá aquí."} />;
+  if (!patients || patients.length === 0) return <Empty message={emptyMessage ?? (emptyAction ? "Aún no hay pacientes. Agrega el primero con «Nuevo paciente»." : "Aún no hay pacientes registrados. Cuando el equipo registre el primero aparecerá aquí.")} action={emptyAction} />;
 
   return (
     <div className="patient-list">

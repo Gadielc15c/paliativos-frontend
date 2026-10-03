@@ -37,9 +37,14 @@ export default function Icd10Search({ onSelect, exclude = [], placeholder = "Bus
     enabled: !disabled,
   });
   const showList = variant === "panel" || (focused && (query.length > 0 || data.length > 0));
+  // Keep the first selectable result highlighted so Enter always picks something when results change.
+  const firstSelectable = data.find((item) => !exclude.includes(item.code))?.code ?? "";
+  const [active, setActive] = useState("");
+  useEffect(() => { setActive(firstSelectable); }, [firstSelectable]);
 
   return (
     <Command label={label} shouldFilter={false} className={clsx("icd-command", `is-${variant}`)} loop
+      value={active} onValueChange={setActive}
       onFocus={() => setFocused(true)}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocused(false); }}>
       <div className="search-field glow-border glow-focus icd-command-field">
@@ -47,7 +52,7 @@ export default function Icd10Search({ onSelect, exclude = [], placeholder = "Bus
         <Command.Input value={query} onValueChange={setQuery} placeholder={placeholder} autoFocus={autoFocus} disabled={disabled} aria-label={label} />
       </div>
       {showList && (
-        <Command.List className="icd-command-list">
+        <Command.List className="icd-command-list" onMouseDown={(e) => e.preventDefault()}>
           {isFetching && !data.length && <Command.Loading><span className="icd-command-hint">Buscando…</span></Command.Loading>}
           {isError && <div className="icd-command-hint">No se pudo buscar en el catálogo.</div>}
           {!isFetching && !isError && <Command.Empty className="icd-command-hint">Sin resultados para «{query}».</Command.Empty>}

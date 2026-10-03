@@ -16,3 +16,10 @@
   .app-layout-center-panel { padding: 20px 16px 32px; }
   .sidebar-backdrop { display: none !important; }
 }
+
+/* Asistente side panel: a third column when the page keeps ≥ 1000px (content reflows, no scrim);
+   otherwise a floating panel from the right (pages keep their layout); full-screen sheet on phones. */
+@media (min-width: 1680px) {
+  .app-layout-container.assistant-open { grid-template-columns: 248px minmax(0,1fr) min(var(--assistant-w, 420px), max(360px, calc(100vw - 808px))); }
+  .app-layout-container.sidebar-collapsed.assistant-open { grid-template-columns: 80px minmax(0,1fr) min(var(--assistant-w, 420px), max(360px, calc(100vw - 808px))); }
+}

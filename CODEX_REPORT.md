@@ -210,3 +210,96 @@ El dueño dijo que se veía bien pero estaba todo tirado, y quienes usan la app 
 - **Pacientes nuevos frente a recurrentes en Epidemiología.** Haría falta `GET /epi/breakdown?by=patient_type` (primera visita histórica). Por ahora, "Pacientes nuevos y en seguimiento" usa `/dashboard/kpis`.
 - **Pares de diagnósticos que aparecen juntos.** No se construyó, porque ningún endpoint da los códigos de cada consulta; tampoco se simula. Haría falta `GET /epi/co-occurrence?limit=10`.
 - **Prueba en móvil real.** Falta probar en un iPhone real: barras fijas de Firmar/Grabar, la hoja de contexto y el teclado.
+
+---
+
+# Menos scroll ("tenemos scroll excesivo")
+
+Pase de compactación: no se quitó información; lo secundario pasa a pestañas, disclosures u hojas. Sistema Apple intacto (tokens, `SegmentedControl`, `Sheet`, `DataList`). Sin commits ni cambios en el backend.
+
+## Antes / después (altura de página, datos demo, tema claro)
+
+| Pantalla | 1440 antes | 1440 después | 390 antes | 390 después |
+| --- | --- | --- | --- | --- |
+| **Inicio** (admin) | 3552 px (3,9×) | **1373 px (1,5×)** | 6933 px (8,2×) | **2568 px (3,0×)** |
+| Epidemiología | 5094 px (5,7×) | 1837 px (2,0×) | 7429 px (8,8×) | 3022 px (3,6×) |
+| Ficha › Resumen | 2131 px (2,4×) | 1933 px (2,1×) | 2909 px (3,4×) | 2408 px (2,9×) |
+| Ficha › Historial | 2516 px (2,8×) | 1926 px (2,1×) | 3332 px (3,9×) | 2540 px (3,0×) |
+| Consulta (editor) | 1700 px (1,9×) | 1267 px (1,4×) | 2080 px (2,5×) | 1700 px (2,0×) |
+| Consulta › revisión IA | 4115 px (4,6×) | 2591 px (2,9×) | — | — |
+| Ajustes visuales | 3308 px (3,7×) | 1101 px (1,2×) | 4026 px (4,8×) | 1493 px (1,8×) |
+
+## Qué cambió
+
+| Pantalla | Cambio |
+| --- | --- |
+| Inicio · Alertas | Filas de una línea dentro de una tarjeta, agrupadas por severidad: icono de severidad (nunca solo color), título, contador, nombres de pacientes truncados con elipsis y **una** acción (toda la fila es el botón; la primera alerta lleva la acción azul con glow). Se muestran las 5 primeras por severidad; "Ver todas (N)" en la cabecera abre un `Sheet` con todas, con detalle y notas por paciente. En el móvil la acción es un chevron (la primera, círculo azul) |
+| Inicio · Hoy | Una sola tarjeta con tres listas cortas (Notas por firmar · Seguimientos esta semana · Pacientes recientes), máximo 3 filas; "Ver más (N)" despliega el resto en el sitio. En el móvil las tres listas se apilan dentro de la misma tarjeta |
+| Inicio · Números | KPIs siempre visibles y compactos (cifra + delta + nota en una línea). `SegmentedControl` **Resumen \| Actividad \| Calidad \| IA \| Equipo** (Equipo solo admin) en la cabecera de la sección; un panel cada vez, en la URL (`?panel=actividad`). Resumen = actividad compacta + "Por revisar" (hasta 3 puntos de calidad abiertos con su acción, "Ver todo" → Calidad) |
+| Epidemiología | Arriba fijo: filtros, **Lo importante** y KPIs (más compactos). Debajo, `SegmentedControl` **Resumen \| Tendencias \| Diagnósticos \| Distribución \| Hallazgos IA** (`?view=`; en 390 px etiquetas cortas Códigos / Grupos / IA). Resumen = tendencia + top 5 ("Ver los 10" → Diagnósticos); Tendencias = tendencia + estacionalidad + flujo de pacientes; Distribución = edad/sexo/capítulo + comparación por médico (admin). "Ver tendencia" desde Lo importante cambia a Tendencias. "Pregúntale a tus datos" sigue al final, con las sugerencias en una fila deslizable |
+| Consulta | Ritmo más compacto. Las secciones opcionales vacías (Enfermedad actual, Antecedentes, Examen físico) se pliegan a una fila "+ Añadir examen físico" que al pulsarse abre la sección y enfoca el campo; las obligatorias para firmar siempre están visibles. En notas firmadas, las vacías se ven como "Examen físico · Sin registrar" en una línea. La columna de contexto del paciente y el panel CIE-10 son `sticky`. Mientras se revisa el borrador IA, el editor se oculta también en escritorio (la columna "Tu nota" ya lo muestra) y las secciones vacías en tu nota muestran la propuesta a todo el ancho |
+| Ficha del paciente | Resumen: Datos clave muestra Edad, Sexo, Alergias y Medicación; contacto y datos administrativos tras "Ver contacto y datos administrativos". Historial: la línea de tiempo queda abierta; Historial médico, Medicación activa, Reconciliaciones y Episodios anteriores son disclosures de una línea con su recuento ("Agregar condición" / "Nueva prescripción" siguen visibles y abren la sección). En el móvil los CIE-10 activos son una fila deslizable |
+| Ajustes visuales | `SegmentedControl` Tema \| Color \| Componentes \| Sistema |
+
+`SegmentedControl` acepta `short` (etiqueta para ≤ 480 px; el nombre completo queda como `aria-label`).
+
+## Verificación
+
+- `ui-verify` añade el check **(g) page too tall**: falla si Inicio (`home*`) mide más de 1,6× el alto del viewport en escritorio (≥ 1024 px), y al final imprime la altura de cada ruta (px y viewports) a 390/768/1440. Las alturas también quedan en `.ui-shots/report.json` (`heights`).
+
+---
+
+# Nuevo paciente y Nueva consulta desde cualquier pantalla
+
+El dueño no encontraba cómo agregar pacientes: `POST /patients` existía pero ninguna pantalla lo usaba (solo entraban pacientes por documentos con autoextracción).
+
+| Área | Decisión |
+| --- | --- |
+| Dónde | **Pacientes**: botón principal "+ Nuevo paciente" en la cabecera de la lista; estado vacío "Aún no hay pacientes. Agrega el primero con «Nuevo paciente»" con el botón. **Inicio**: acciones rápidas **Nueva consulta** (principal, solo con `clinical:write`) y **Nuevo paciente**. **Barra superior**: "+ Nuevo" (menú: Nueva consulta / Nuevo paciente; en el móvil, icono "+"). **Más** (tab bar): Nueva consulta y Nuevo paciente arriba. Un solo `QuickActionsHost` en `AppLayout` aloja la hoja y el selector; `?quick=new-patient` y `?quick=new-consultation` los abren por enlace |
+| Formulario | `Sheet` de una columna, etiquetas arriba, campos de 16 px. Obligatorios: Nombre(s), Apellidos, Documento, Fecha de nacimiento, Sexo (radios segmentados). "Más datos" (plegado): teléfono, otro teléfono, dirección, aseguradora, médico asignado (admin elige de la lista; médico y secretaria ven el suyo, el backend lo fija) y notas. Campos según `PatientCreate` del backend (`first_name`, `last_name`, `document_number`, `birth_date`, `gender` female/male/other/unknown, …). Nombre y apellidos van separados porque el backend los guarda así |
+| Validación | En español bajo cada campo (`aria-invalid`, foco al primer error): obligatorios, fecha no futura ni anterior a 1900, documento de ≥ 4 caracteres, teléfonos válidos |
+| Duplicados | Antes de guardar (y al salir del campo documento) se busca en la lista de pacientes del usuario (páginas de 100; no hay búsqueda en servidor): mismo documento sin guiones/espacios → bloquea con "Ya existe un paciente con este documento: … Abrir su ficha"; mismo nombre + fecha de nacimiento → aviso con enlace y "Crear de todas formas". Un 409 del servidor se muestra igual |
+| Al guardar | Toast "Paciente creado" con acción **Iniciar consulta**, se abre la ficha (cuya acción principal es "Nueva consulta"). Si se creó desde el selector de Nueva consulta, se crea el borrador y se abre el editor directamente |
+| Desde foto | "Crear desde foto de cédula o documento": con `ai:use` abre el Asistente con la petición escrita (adjuntar/cámara desde el composer); sin IA pero con `documents:write`, va a Documentos (subida con autoextracción). Sin ninguno de los dos no se muestra |
+| Nueva consulta | Hoja con búsqueda cmdk por nombre o documento (sin acentos ni guiones), edad y documento en cada fila; al elegir se crea el borrador de hoy y se abre el editor; al final "+ Nuevo paciente «texto buscado»" |
+| Permisos | `patients:write` (admin, médico y secretaria, como en el backend; se añadió a la secretaria en el mapa de respaldo del frontend) y `clinical:write` para Nueva consulta |
+
+Archivos: `src/modules/patients/quick/` (`store.ts`, `useQuick.ts`, `NewPatientSheet.tsx`, `PatientPicker.tsx`, `QuickActionsHost.tsx`, `quick.css`), más `AppLayout`, `TopBar`, `TabBar`, `HomePage`, `PatientsPage`, `PatientList`. Mock: `POST /patients` en memoria con 409 por documento repetido; `POST /consultations` ya existía.
+
+`ui-verify`: `new-patient`, `new-patient-check` (DEV `&np=check`: documento repetido + errores de validación), `new-patient-secretary`, `new-consultation`, `patients-empty`.
+
+---
+
+# Asistente (chat con agente)
+
+Contrato: `../AGENT_CHAT_CONTRACT.md` y la sección agent de `../paliativos-backend/API_CHANGES.md` (multipart `files[]`, `GET /agent/attachments/{file_ref}` para miniaturas del historial, `apply_extraction` con `file_ref` y `document_id: null`, `reject` con `{reason}`). El backend local en :8000 aún no tenía `/agent` en esta sesión (404), así que el camino SSE real está escrito contra el contrato pero sin probar de punta a punta.
+
+| Área | Decisión |
+| --- | --- |
+| Entradas | Botón **"✦ Asistente"** en la barra superior (tinte IA, glow en hover/foco, atajo **Ctrl/⌘ K**). La navegación sigue en 5 entradas; en el móvil, botón en la barra superior y fila en **Más**. En la ficha del paciente, **"✦ Preguntar al asistente"** abre el chat con ese paciente como contexto (`openAssistant({ patientId, patientName, prompt? })` en `src/modules/assistant/store.ts`) |
+| Superficies | Escritorio: panel derecho redimensionable (360–720 px, 420 por defecto, recordado por navegador) que flota sobre la página o, a ≥ 1680 px, ocupa su propia columna; botón para expandir a **/asistente** (historial a la izquierda). Móvil: hoja a pantalla completa (100dvh, safe areas) |
+| Composer | Textarea que crece, adjuntar imágenes/PDF (varios; máx. 5 × 10 MB, errores en español), arrastrar y soltar en escritorio, cámara en móvil (`accept="image/*" capture="environment"`), pegar imágenes, miniaturas con quitar, Enter envía / Mayús+Enter salto de línea, **Detener** (AbortController) |
+| Mensajes | Markdown propio y seguro (React, sin HTML crudo; enlaces solo internos o http(s)); chips de herramienta "Buscando pacientes…" → ✓ / error; bloques: tabla → `DataList` (tarjetas en móvil), gráfico → recharts pequeño (líneas 2 px, leyenda con ≥ 2 series, tooltip), paciente → tarjeta con code pills y "Ver ficha", códigos → pills, extracción → campos con nivel de confianza en texto (Alta/Media/Baja, no solo color) y la miniatura al lado |
+| Propuestas | Tarjeta con **"✦ IA · Pendiente de confirmación"**, resumen claro de qué se escribirá, campos editables ("Corregir antes" en las largas), **Confirmar / Descartar**; tras confirmar muestra el resultado con enlace al documento, paciente o consulta; estados aplicada y descartada |
+| Historial | Nueva conversación, título del primer mensaje, borrar, cargar con `GET /conversations/{id}` |
+| Vacío | Sugerencias según rol (médico/admin: foto de laboratorio, pacientes sin seguimiento, "Resume a {paciente}", diagnósticos que aumentaron; secretaria: solo no clínicas) |
+| Accesibilidad | Foco al abrir y vuelta al disparador al cerrar, Escape cierra, `role="log"`, región `aria-live="polite"` con anuncio del texto en tramos (no por token) |
+| Errores | `sonner` en español con **Reintentar** (red, 403, IA desactivada, archivo grande o no admitido) |
+
+Archivos: `src/modules/assistant/**`, `src/services/endpoints/agent.ts`, `src/types/agent.ts`, `src/dev/mockAgent.ts`; cableado en `src/app/layouts/` (TopBar, TabBar, AppLayout, NotificationToaster: los toasts suben mientras el chat está abierto) y la ruta `/asistente`.
+
+## Modo mock
+
+`?mock=1` simula el SSE con latencias reales: evento `conversation`, chips de herramienta, texto en deltas, bloques y propuestas según la intención ("seguimiento" → tabla; "aumentaron/diagnósticos" → gráfico + códigos; "resume"/nombre → tarjeta de paciente; adjunto → `read_attachment` + extracción + `apply_extraction` y `attach_document`; "crear paciente" → `create_patient`; "nota/consulta" → `draft_consultation_note`). Confirmar/descartar, lista, detalle y borrado en memoria. Vistas deterministas (solo DEV): `/asistente?mock=1&demo=chat`, `/?mock=1&assistant=open`, `/patients?mock=1&assistant=open&demo=chat`, `/asistente?mock=1&role=secretary`.
+
+## Verificación (los dos pases)
+
+- `ui-verify`: rutas nuevas `home-panel-quality`, `home-panel-team`, `epi-view-trends`, `epi-view-distribution`, `epi-view-insights`, `assistant-empty`, `assistant-chat`, `assistant-panel`, `assistant-panel-chat`, `assistant-secretary`. `visible()` ahora ignora lo que quedó desplazado fuera de un scroller interno (log del chat, cuerpo de hojas), que antes contaba como "pegado" a la cabecera.
+- Pasada completa final (los tres pases): **0 incidencias en 684 visitas** (demo/worst × 390/768/1440 × claro/oscuro), sin errores de página. Inicio a 1440: 1373 px (1,5×), también con datos `worst` y con cada panel ≤ 1,6×.
+- `npx tsc --noEmit` y `npm run build`: OK. `dist/` no contiene el mock.
+
+## Pendiente
+
+- Probar contra el backend reiniciado con `/agent` (SSE real, miniaturas por `/agent/attachments`).
+- iPhone real: cámara, teclado sobre el composer, safe areas de la hoja, barras fijas.
+- Revisión IA de la consulta sigue en ~2,9× en escritorio con 6 secciones + 5 códigos (es un flujo de revisión; ya se ocultó el editor durante la revisión).

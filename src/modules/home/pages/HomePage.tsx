@@ -1,4 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { Stethoscope, UserPlus } from "lucide-react";
+import Button from "../../../components/common/Button";
+import { openNewConsultation, openNewPatient } from "../../patients/quick/store";
 import PageHeader from "../../../components/common/PageHeader";
 import { useAppStore } from "../../../app/store/useAppStore";
 import { usePermission } from "../../../utils/usePermission";
@@ -23,6 +26,8 @@ export default function HomePage() {
   const navigate = useNavigate();
   const user = useAppStore((s) => s.user);
   const canClinical = usePermission("clinical:read");
+  const canConsult = usePermission("clinical:write");
+  const canNewPatient = usePermission("patients:write");
   const isAdmin = user?.role === "admin";
   const { data: alerts } = useDashboardAlerts();
   const date = new Date().toLocaleDateString("es-DO", { weekday: "long", day: "numeric", month: "long" });
@@ -36,8 +41,14 @@ export default function HomePage() {
     <div className="data-screen home-page">
       <PageHeader
         eyebrow={<span className="home-date">Inicio · {date}</span>}
-        title={`${greeting()}${user?.name ? `, ${user.name}` : ""}`}
+        title={<span className="home-greeting" title={user?.name}>{`${greeting()}${user?.name ? `, ${user.name}` : ""}`}</span>}
         description={lead}
+        actions={(canConsult || canNewPatient) ? (
+          <div className="home-quick" role="group" aria-label="Acciones rápidas">
+            {canConsult && <Button variant="primary" className="glow-border" onClick={openNewConsultation}><Stethoscope size={18} aria-hidden="true" /><span>Nueva consulta</span></Button>}
+            {canNewPatient && <Button variant={canConsult ? "gray" : "primary"} onClick={() => openNewPatient()}><UserPlus size={18} aria-hidden="true" /><span>Nuevo paciente</span></Button>}
+          </div>
+        ) : undefined}
       />
       <AlertsSection onEmptyAction={() => navigate("/patients")} />
       <TodaySection />

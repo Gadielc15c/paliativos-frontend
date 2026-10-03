@@ -178,3 +178,27 @@
 @media (max-width: 768px) {
   .patient-profile-tabs .segmented-item, .tl-filter .segmented-item { padding-inline: 2px; font-size: .75rem; }
 }
+
+/* ---- Scroll pass: collapsible secondary sections, compact rhythm ---- */
+.patient-profile-section[data-collapsed] { gap: 0; padding-block: 12px; }
+.patient-profile-section[data-collapsed] > :not(.patient-profile-section-head) { display: none; }
+.patient-profile-section-head h3 { min-width: 0; flex: 1 1 240px; }
+.patient-profile-disclosure { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; margin: 0 -8px; padding: 0 8px; border: 0; border-radius: 12px; background: transparent; color: var(--foreground); font: 600 1.125rem/1.3 var(--font-sans); letter-spacing: -.015em; text-align: left; }
+.patient-profile-disclosure > span:not(.patient-profile-disclosure-meta) { flex: none; }
+.patient-profile-disclosure-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted-foreground); font-size: .875rem; font-weight: 400; letter-spacing: 0; }
+.patient-profile-disclosure-icon { flex: none; color: var(--muted-foreground); transform: rotate(-90deg); transition: transform 200ms var(--ease-out); }
+.patient-profile-disclosure[aria-expanded="true"] .patient-profile-disclosure-icon { transform: none; }
+@media (hover: hover) and (pointer: fine) { .patient-profile-disclosure:hover { background: color-mix(in srgb, var(--foreground) 4%, transparent); } }
+:root body .patient-profile-disclosure:active:not(:disabled) { transform: none; opacity: .7; }
+.patient-profile-more-data { justify-self: start; min-height: 36px; margin: -8px 0 0 -8px; padding: 0 8px; border: 0; border-radius: 10px; background: transparent; color: var(--accent); font: 600 .9375rem/1.3 var(--font-sans); }
+@media (hover: hover) and (pointer: fine) { .patient-profile-more-data:hover { background: var(--accent-soft); } }
+.patient-profile-section { gap: 16px; padding: 20px 24px; }
+.patient-profile-info-card { padding: 10px 0; }
+@media (prefers-reduced-motion: reduce) { .patient-profile-disclosure-icon { transition: none; } }
+@media (max-width: 768px) { .patient-profile-section { padding: 16px; } .patient-profile-section[data-collapsed] { padding-block: 8px; } }
+@media (max-width: 768px) {
+  /* One swipeable row of CIE-10 pills instead of one line per code. */
+  .patient-profile-dx .code-chip-list { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 4px; scrollbar-width: none; }
+  .patient-profile-dx .code-chip-list::-webkit-scrollbar { display: none; }
+  .patient-profile-dx .code-chip-list > * { flex: none; }
+}

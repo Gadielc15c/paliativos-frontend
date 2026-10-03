@@ -1,84 +1,106 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, ChevronDown, ChevronRight, Users } from "lucide-react";
-import clsx from "clsx";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import Button from "../../../components/common/Button";
+import Sheet from "../../../components/common/Sheet";
 import InlineState from "../../../components/clinical/InlineState";
-import { SEVERITY_META, SeverityBadge, useDashboardAlerts } from "../../../components/clinical/alerts";
+import { SEVERITY_META, useDashboardAlerts } from "../../../components/clinical/alerts";
 import type { AlertSeverity, DashboardAlert } from "../../../types/dashboard";
 import { fmt } from "./format";
 
 const ORDER: AlertSeverity[] = ["alert", "watch", "info"];
+const TOP = 5;
 
-function PatientNames({ alert }: { alert: DashboardAlert }) {
-  if (!alert.patients.length) return null;
-  // Same patient can appear twice in a list of refs; show unique names.
-  const names = [...new Map(alert.patients.map((p) => [`${p.id}-${p.display_name}`, p])).values()];
-  const shown = names.slice(0, 3);
-  const extra = Math.max(0, alert.count - shown.length);
+/** Unique patient names (a patient can appear twice in the refs). */
+function patientNames(alert: DashboardAlert, withNotes = false) {
+  const unique = [...new Map(alert.patients.map((p) => [`${p.id}-${p.display_name}`, p])).values()];
+  const names = unique.map((p) => (withNotes && p.note ? `${p.display_name} (${p.note})` : p.display_name)).join(", ");
+  const extra = Math.max(0, alert.count - unique.length);
+  return { names, extra };
+}
+
+/** One line per alert: severity icon + dot, title, count, names (truncated) and one action. The whole row is the action. */
+function AlertRow({ alert, primary, expanded, onGo }: { alert: DashboardAlert; primary: boolean; expanded?: boolean; onGo: (a: DashboardAlert) => void }) {
+  const meta = SEVERITY_META[alert.severity];
+  const { names, extra } = patientNames(alert, expanded);
   return (
-    <p className="home-alert-patients">
-      <Users size={16} aria-hidden="true" />
-      <span>
-        {shown.map((p, i) => (
-          <span key={`${p.id}-${i}`} className="home-alert-patient">
-            {p.display_name}{p.note ? <span className="home-alert-note"> ({p.note})</span> : null}{i < shown.length - 1 ? ", " : ""}
+    <li>
+      <button type="button" className="home-alert-row" data-severity={alert.severity} data-expanded={expanded || undefined} onClick={() => onGo(alert)}>
+        <span className="home-alert-sev" title={meta.label}><meta.icon size={16} aria-hidden="true" /><span className="sr-only">{meta.label}: </span></span>
+        <span className="home-alert-copy">
+          <span className="home-alert-line">
+            <span className="home-alert-title">{alert.title}</span>
+            <span className="home-alert-count" aria-label={`${alert.count} casos`}>{fmt(alert.count)}</span>
           </span>
-        ))}
-        {extra > 0 && <span className="home-alert-more"> y {fmt(extra)} más</span>}
-      </span>
-    </p>
+          {expanded && <span className="home-alert-detail">{alert.detail}</span>}
+          {names && (
+            <span className="home-alert-names">{names}{extra > 0 ? ` y ${fmt(extra)} más` : ""}</span>
+          )}
+        </span>
+        <span className={primary ? "home-alert-go is-primary glow-border" : "home-alert-go"}>
+          <span className="home-alert-go-label">{alert.action.label}</span>
+          <ChevronRight size={16} aria-hidden="true" />
+        </span>
+      </button>
+    </li>
   );
 }
 
-function AlertCard({ alert, first }: { alert: DashboardAlert; first: boolean }) {
-  const navigate = useNavigate();
+function Groups({ items, primaryId, expanded, onGo }: { items: DashboardAlert[]; primaryId?: string; expanded?: boolean; onGo: (a: DashboardAlert) => void }) {
   return (
-    <article className="home-alert" data-severity={alert.severity} aria-labelledby={`alert-${alert.id}`}>
-      <div className="home-alert-top">
-        <SeverityBadge severity={alert.severity} />
-        <span className="home-alert-count" aria-label={`${alert.count} casos`}>{fmt(alert.count)}</span>
-      </div>
-      <h3 id={`alert-${alert.id}`} className="home-alert-title">{alert.title}</h3>
-      <p className="home-alert-detail">{alert.detail}</p>
-      <PatientNames alert={alert} />
-      <Button variant={first ? "primary" : "tinted"} className={clsx("home-alert-action", first && "glow-border")} onClick={() => navigate(alert.action.route)}>
-        <span>{alert.action.label}</span><ChevronRight size={18} aria-hidden="true" />
-      </Button>
-    </article>
+    <>
+      {ORDER.map((sev) => {
+        const group = items.filter((a) => a.severity === sev);
+        if (!group.length) return null;
+        return (
+          <div key={sev} className="home-alert-group" data-severity={sev}>
+            <h3 className="home-alert-group-title">{SEVERITY_META[sev].heading}</h3>
+            <ul className="home-alert-list">
+              {group.map((a) => <AlertRow key={a.id} alert={a} primary={a.id === primaryId} expanded={expanded} onGo={onGo} />)}
+            </ul>
+          </div>
+        );
+      })}
+    </>
   );
 }
 
-/** Alerts first: grouped by severity, one action per card. Info-level is collapsed by default. */
+/** Alerts first, compact: top 5 by severity as one-line rows; the rest in a sheet. */
 export default function AlertsSection({ onEmptyAction }: { onEmptyAction: () => void }) {
+  const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useDashboardAlerts();
-  const [showInfo, setShowInfo] = useState(false);
-  const items = data?.items ?? [];
-  const urgent = items.filter((a) => a.severity !== "info");
-  const firstId = (urgent[0] ?? items[0])?.id;
+  const [all, setAll] = useState(false);
+  const items = [...(data?.items ?? [])].sort((a, b) => ORDER.indexOf(a.severity) - ORDER.indexOf(b.severity));
+  const top = items.slice(0, TOP);
+  const primaryId = top[0]?.id;
+  const go = (a: DashboardAlert) => { setAll(false); navigate(a.action.route); };
 
   return (
     <section className="home-section home-alerts" aria-labelledby="home-alerts-title">
       <header className="home-section-head">
         <h2 id="home-alerts-title" className="home-section-title">Alertas</h2>
         {data && items.length > 0 && (
-          <p className="home-section-meta">
+          <p className="home-section-meta home-section-meta-grow">
             {data.counts.alert > 0 && `${fmt(data.counts.alert)} ${data.counts.alert === 1 ? "requiere" : "requieren"} atención`}
             {data.counts.alert > 0 && data.counts.watch > 0 && " · "}
             {data.counts.watch > 0 && `${fmt(data.counts.watch)} para vigilar`}
+            {data.counts.info > 0 && ` · ${fmt(data.counts.info)} informativas`}
           </p>
+        )}
+        {items.length > TOP && (
+          <Button variant="gray" size="sm" className="home-head-action" onClick={() => setAll(true)}>Ver todas ({fmt(items.length)})</Button>
         )}
       </header>
 
       {isLoading ? (
-        <div className="home-alert-grid">{[0, 1].map((i) => <span key={i} className="skeleton" style={{ height: 200 }} />)}</div>
+        <span className="skeleton" style={{ height: 240 }} />
       ) : isError ? (
         <div className="data-card"><div className="data-card-body">
           <InlineState kind="error" message="No se pudieron cargar las alertas. Revisa tu conexión." onRetry={() => void refetch()} />
         </div></div>
       ) : items.length === 0 ? (
         <div className="home-all-clear">
-          <CheckCircle2 size={28} aria-hidden="true" />
+          <CheckCircle2 size={24} aria-hidden="true" />
           <div className="home-all-clear-copy">
             <h3>Todo en orden</h3>
             <p>No hay pacientes ni notas que necesiten atención ahora. Cuando algo cambie, aparecerá aquí primero.</p>
@@ -86,30 +108,17 @@ export default function AlertsSection({ onEmptyAction }: { onEmptyAction: () => 
           <Button variant="primary" className="glow-border" onClick={onEmptyAction}><span>Ver mis pacientes</span><ChevronRight size={18} aria-hidden="true" /></Button>
         </div>
       ) : (
-        ORDER.map((sev) => {
-          const group = items.filter((a) => a.severity === sev);
-          if (!group.length) return null;
-          const collapsed = sev === "info" && !showInfo;
-          return (
-            <div key={sev} className="home-alert-group" data-severity={sev}>
-              {sev === "info" ? (
-                <button type="button" className="home-disclosure" aria-expanded={showInfo} onClick={() => setShowInfo((v) => !v)}>
-                  <ChevronDown size={18} aria-hidden="true" className="home-disclosure-icon" />
-                  <span>{SEVERITY_META.info.heading}</span>
-                  <span className="home-disclosure-count">{fmt(group.length)}</span>
-                </button>
-              ) : (
-                <h3 className="home-alert-group-title">{SEVERITY_META[sev].heading}</h3>
-              )}
-              {!collapsed && (
-                <div className="home-alert-grid">
-                  {group.map((a) => <AlertCard key={a.id} alert={a} first={a.id === firstId} />)}
-                </div>
-              )}
-            </div>
-          );
-        })
+        <div className="data-card home-alerts-card">
+          <Groups items={top} primaryId={primaryId} onGo={go} />
+        </div>
       )}
+
+      <Sheet open={all} onClose={() => setAll(false)} title="Todas las alertas" size="lg"
+        subtitle={`${fmt(items.length)} alertas, de la más urgente a la informativa. Cada una tiene una sola acción.`}>
+        <div className="home-alerts-sheet">
+          <Groups items={items} primaryId={primaryId} expanded onGo={go} />
+        </div>
+      </Sheet>
     </section>
   );
 }

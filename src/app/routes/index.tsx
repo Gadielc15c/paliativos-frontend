@@ -12,6 +12,7 @@ import ConsultationPage from "../../modules/consultations/pages/ConsultationPage
 import StaffPage from "../../modules/staff/pages/StaffPage";
 import HomePage from "../../modules/home/pages/HomePage";
 import AdminPage from "../../modules/admin/pages/AdminPage";
+import AssistantPage from "../../modules/assistant/pages/AssistantPage";
 import { RequirePermission } from "../../utils/usePermission";
 
 export const router = createBrowserRouter([
@@ -72,6 +73,11 @@ export const router = createBrowserRouter([
       {
         path: "consultations/:consultationId",
         element: <RequirePermission permissions={["clinical:read"]}><ConsultationPage /></RequirePermission>,
+      },
+      {
+        // Asistente (agent chat) at full page; the same chat opens as a side panel anywhere.
+        path: "asistente",
+        element: <AssistantPage />,
       },
       {
         path: "equipo",

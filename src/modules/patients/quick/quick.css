@@ -1,0 +1,57 @@
+/* =========================================================================
+   Nuevo paciente (sheet form) + Nueva consulta (patient picker)
+   One column, labels above, 16px inputs, errors in plain Spanish under the field.
+   ========================================================================= */
+.np-form { display: grid; gap: 16px; }
+.np-field { display: grid; gap: 6px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.np-field > label, .np-field > legend, .np-static-label { padding: 0; color: var(--foreground); font-size: .9375rem; font-weight: 500; }
+.np-field input, .np-field select, .np-field textarea { width: 100%; font-size: 16px; }
+.np-field[data-invalid] input, .np-field[data-invalid] select { box-shadow: 0 0 0 2px color-mix(in srgb, var(--status-critical) 55%, transparent); }
+.np-error { margin: 0; color: var(--status-critical); font-size: .875rem; line-height: 1.4; }
+.np-hint { margin: 0; color: var(--muted-foreground); font-size: .8125rem; }
+.np-static { margin: 0; color: var(--muted-foreground); font-size: .9375rem; }
+
+/* Sex: iOS-style segmented radios (labels are the tap targets). */
+.np-seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 12px; background: color-mix(in srgb, var(--foreground) 6%, var(--surface-muted)); }
+.np-seg-item { position: relative; display: flex; min-width: 0; }
+.np-seg-item input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.np-seg-item span { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 40px; padding: 0 4px; border-radius: 9px; color: var(--foreground); font-size: .875rem; font-weight: 500; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: background-color 150ms ease-out; }
+.np-seg-item input:checked + span { background: var(--surface); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 3px 8px rgba(0,0,0,.08); }
+:root[data-theme="dark"] .np-seg-item input:checked + span { background: #636366; }
+.np-seg-item input:focus-visible + span { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 1px var(--accent); }
+
+.np-photo { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px; border: 1px dashed color-mix(in srgb, var(--state-ai) 40%, var(--border)); border-radius: 14px; background: var(--ai-soft); color: var(--ai-foreground); font: inherit; text-align: left; transition: transform 120ms var(--ease-out); }
+.np-photo > svg { flex: none; }
+.np-photo-copy { display: grid; gap: 2px; min-width: 0; }
+.np-photo-copy strong { font-size: .9375rem; }
+.np-photo-copy span { color: var(--muted-foreground); font-size: .8125rem; line-height: 1.35; }
+:root body .np-photo:active:not(:disabled) { transform: scale(.98); }
+
+.np-dup { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--status-warning) 14%, var(--surface)); font-size: .9375rem; line-height: 1.45; }
+.np-dup.is-block { background: color-mix(in srgb, var(--status-critical) 10%, var(--surface)); }
+.np-dup > svg { flex: none; margin-top: 2px; color: color-mix(in srgb, var(--status-warning) 70%, var(--foreground)); }
+.np-dup.is-block > svg { color: var(--status-critical); }
+.np-dup p { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.np-dup a { font-weight: 600; }
+
+.np-more { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; color: var(--accent); font: 600 .9375rem/1.3 var(--font-sans); text-align: left; }
+.np-more > svg { flex: none; transform: rotate(-90deg); transition: transform 200ms var(--ease-out); }
+.np-more[aria-expanded="true"] > svg { transform: none; }
+.np-more-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted-foreground); font-size: .8125rem; font-weight: 400; }
+:root body .np-more:active:not(:disabled) { transform: none; opacity: .7; }
+.np-more-body { display: grid; gap: 16px; }
+.np-link { min-height: 36px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: var(--accent); font: 600 .875rem/1.3 var(--font-sans); }
+
+/* Picker */
+.picker-command .picker-list { max-height: none; }
+.picker-item { min-height: 52px; }
+.picker-copy { display: grid; gap: 1px; min-width: 0; flex: 1 1 auto; }
+.picker-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.picker-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted-foreground); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.picker-new { min-height: 48px; margin-top: 4px; border-top: 1px solid var(--border); color: var(--accent); }
+.picker-new .picker-name { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) { .np-more > svg, .np-photo { transition: none; } }
+@media (max-width: 380px) { .np-seg-item span { font-size: .8125rem; } }
+.np-more > span:not(.np-more-meta) { flex: none; }
+.np-form { margin-bottom: 4px; }

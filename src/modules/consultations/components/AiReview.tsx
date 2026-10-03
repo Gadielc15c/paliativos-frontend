@@ -229,11 +229,13 @@ export default function AiReview({ draft, current, existingCodes, applying, onAp
         <div className="ai-compare-labels" aria-hidden="true"><span>Tu nota</span><span>Propuesta de IA</span></div>
         {proposed.length === 0 && <p className="ai-meta">La IA no propuso texto para ninguna sección SOAP.</p>}
         {proposed.map((f) => (
-          <div key={f} className="ai-compare-row">
-            <div className="ai-compare-current">
-              <span className="ai-proposal-caption">{SOAP_LABELS[f]}</span>
-              <p>{current[f]?.trim() || <em>Vacío</em>}</p>
-            </div>
+          <div key={f} className="ai-compare-row" data-new={!current[f]?.trim() || undefined}>
+            {current[f]?.trim() ? (
+              <div className="ai-compare-current">
+                <span className="ai-proposal-caption">{SOAP_LABELS[f]}</span>
+                <p>{current[f]}</p>
+              </div>
+            ) : <span className="sr-only">{SOAP_LABELS[f]}: vacío en tu nota.</span>}
             {fieldCard(f, { showCurrent: false })}
           </div>
         ))}

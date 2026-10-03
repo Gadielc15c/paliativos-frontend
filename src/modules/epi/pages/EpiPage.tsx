@@ -31,6 +31,14 @@ import "../../../components/clinical/clinical.css";
 import "./EpiPage.css";
 
 const MAX_COMPARE = 4;
+type View = "resumen" | "tendencias" | "diagnosticos" | "distribucion" | "hallazgos";
+const VIEWS: { value: View; label: string; short?: string }[] = [
+  { value: "resumen", label: "Resumen" },
+  { value: "tendencias", label: "Tendencias" },
+  { value: "diagnosticos", label: "Diagnósticos", short: "Códigos" },
+  { value: "distribucion", label: "Distribución", short: "Grupos" },
+  { value: "hallazgos", label: "Hallazgos IA", short: "IA" },
+];
 
 function CardSkeleton({ rows = 5 }: { rows?: number }) {
   return <div className="card-skeleton" aria-hidden="true">{Array.from({ length: rows }, (_, i) => <span key={i} className="skeleton" style={{ height: 40, width: `${92 - i * 9}%` }} />)}</div>;
@@ -48,6 +56,9 @@ export default function EpiPage() {
   const [compareOpen, setCompareOpen] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const [by, setBy] = useState<EpiBreakdownBy>("age_sex");
+  const rawView = ctl.params.get("view") as View | null;
+  const view: View = rawView && VIEWS.some((v) => v.value === rawView) ? rawView : "resumen";
+  const setView = (v: View) => set({ view: v === "resumen" ? null : v });
 
   const summary = useQuery({ queryKey: ["epi-summary", filters], queryFn: () => epiEndpoints.summary(filters) });
   const top = useQuery({ queryKey: ["epi-top", filters], queryFn: () => epiEndpoints.top(filters, 10) });
@@ -67,7 +78,7 @@ export default function EpiPage() {
   }, [insights.data]);
   const trendRef = useRef<HTMLElement>(null);
   const showTrendFor = (code: string) => {
-    setCodes([code.slice(0, 3)]);
+    set({ codes: code.slice(0, 3), view: "tendencias" });
     requestAnimationFrame(() => trendRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
   const filterCategory = (c: { category_key: string; label: string } | null) => set({ cat: c?.category_key ?? null, catl: c?.label ?? null, chapter: null });
@@ -77,51 +88,7 @@ export default function EpiPage() {
   const empty = summary.isSuccess && summary.data.diagnoses.value === 0;
   const periodText = summary.data ? `${dateLabel(summary.data.period.date_from)} – ${dateLabel(summary.data.period.date_to)}` : "";
 
-  return (
-    <div className="data-screen epi-page">
-      <PageHeader
-        eyebrow="Análisis clínico"
-        title="Epidemiología"
-        description={periodText ? `Diagnósticos codificados con CIE-10 · ${periodText}` : "Diagnósticos codificados con CIE-10 de tus pacientes."}
-        actions={
-          <Button variant="tinted" className="epi-ask-jump" onClick={() => { askRef.current?.focus(); askRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }); }}>
-            <Sparkles size={18} aria-hidden="true" /><span>Pregúntale a tus datos</span>
-          </Button>
-        }
-        filters={<EpiFilterBar ctl={ctl} />}
-      />
-
-      <HighlightsCard filters={filters} onPatients={(code, description) => setDrill({ code, description })} onTrend={showTrendFor}
-        onCategory={filterCategory} onWiden={() => set({ period: "90d", from: null, to: null })} />
-
-      <h2 className="epi-section-title">Resumen del período</h2>
-      {summary.isError ? (
-        <section className="data-card"><div className="data-card-body">
-          <InlineState kind="error" message="No se pudieron cargar los indicadores. Revisa tu conexión e inténtalo de nuevo." onRetry={() => void summary.refetch()} />
-        </div></section>
-      ) : (
-        <section className="epi-section" aria-label="Indicadores">
-          <KpiTiles data={summary.data} loading={summary.isLoading} />
-          {summary.data && summary.data.data_quality.consultations_total > 0 && (
-            <p className="epi-quality">
-              {fmt(summary.data.data_quality.consultations_without_diagnosis)} consultas sin diagnóstico y {fmt(summary.data.data_quality.consultations_unsigned)} sin firmar en el período. No se cuentan hasta que se codifiquen.
-            </p>
-          )}
-        </section>
-      )}
-
-      {empty ? (
-        <section className="data-card"><div className="data-card-body">
-          <InlineState message="No hay diagnósticos codificados con estos filtros. Prueba con un período más amplio o quita algún filtro.">
-            <Button variant="gray" onClick={() => set({ period: "12m", from: null, to: null, doctor: null, sex: null, age: null, chapter: null, code: null, cat: null, catl: null })}>Ver últimos 12 meses sin filtros</Button>
-          </InlineState>
-        </div></section>
-      ) : (
-        <>
-          <InsightsCard filters={filters} activeKey={ctl.params.get("cat")} onOpenCode={(code, description) => setDrill({ code, description })}
-            onCategory={filterCategory} />
-
-          <h2 className="epi-section-title">Tendencias y distribución</h2>
+  const trendCard = (
           <section ref={trendRef} className="data-card epi-trend" aria-labelledby="epi-trend-title">
             <div className="data-card-header">
               <div>
@@ -165,8 +132,8 @@ export default function EpiPage() {
               ))}
             </div>
           </section>
-
-          <div className="epi-two">
+  );
+  const topCard = (topLimit: number) => (
             <section className="data-card" aria-labelledby="epi-top-title">
               <div className="data-card-header">
                 <div>
@@ -179,11 +146,15 @@ export default function EpiPage() {
                   <InlineState kind="error" message="No se pudo cargar el ranking." onRetry={() => void top.refetch()} />
                 ) : (
                   <BarList label="Diagnósticos más frecuentes" showRank onSelect={(it) => setDrill({ code: it.code!, description: it.label })}
-                    items={(top.data?.items ?? []).map((i) => ({ key: i.code, code: i.code, label: i.description, value: i.count, delta: i.delta, deltaPct: i.delta_pct, previous: i.previous_count, meta: `${fmt(i.patients)} ${i.patients === 1 ? "paciente" : "pacientes"} · ${String(i.share_pct).replace(".", ",")}%` }))} />
+                    items={(top.data?.items ?? []).slice(0, topLimit).map((i) => ({ key: i.code, code: i.code, label: i.description, value: i.count, delta: i.delta, deltaPct: i.delta_pct, previous: i.previous_count, meta: `${fmt(i.patients)} ${i.patients === 1 ? "paciente" : "pacientes"} · ${String(i.share_pct).replace(".", ",")}%` }))} />
                 )}
               </div>
+              {topLimit < (top.data?.items.length ?? 0) && (
+                <div className="epi-card-foot"><Button variant="gray" size="sm" onClick={() => setView("diagnosticos")}>Ver los {fmt(top.data!.items.length)} más frecuentes</Button></div>
+              )}
             </section>
-
+  );
+  const breakdownCard = (
             <section className="data-card" aria-labelledby="epi-breakdown-title">
               <div className="data-card-header epi-breakdown-head">
                 <h2 id="epi-breakdown-title" className="data-card-title">Distribución</h2>
@@ -201,13 +172,70 @@ export default function EpiPage() {
                 ))}
               </div>
             </section>
-          </div>
+  );
 
-          <h2 className="epi-section-title">Más análisis</h2>
-          <SeasonalityHeatmap filters={filters} categories={seasonKeys} />
-          <div className={isAdmin ? "epi-two is-even" : "epi-one"}>
-            <PatientFlowCard filters={filters} />
-            {isAdmin && <DoctorCompareCard filters={filters} />}
+  return (
+    <div className="data-screen epi-page">
+      <PageHeader
+        eyebrow="Análisis clínico"
+        title="Epidemiología"
+        description={periodText ? `Diagnósticos codificados con CIE-10 · ${periodText}` : "Diagnósticos codificados con CIE-10 de tus pacientes."}
+        actions={
+          <Button variant="tinted" className="epi-ask-jump" onClick={() => { askRef.current?.focus(); askRef.current?.scrollIntoView({ block: "center", behavior: "smooth" }); }}>
+            <Sparkles size={18} aria-hidden="true" /><span>Pregúntale a tus datos</span>
+          </Button>
+        }
+        filters={<EpiFilterBar ctl={ctl} />}
+      />
+
+      <HighlightsCard filters={filters} onPatients={(code, description) => setDrill({ code, description })} onTrend={showTrendFor}
+        onCategory={filterCategory} onWiden={() => set({ period: "90d", from: null, to: null })} />
+
+      {summary.isError ? (
+        <section className="data-card"><div className="data-card-body">
+          <InlineState kind="error" message="No se pudieron cargar los indicadores. Revisa tu conexión e inténtalo de nuevo." onRetry={() => void summary.refetch()} />
+        </div></section>
+      ) : (
+        <section className="epi-section" aria-label="Indicadores">
+          <KpiTiles data={summary.data} loading={summary.isLoading} />
+          {summary.data && summary.data.data_quality.consultations_total > 0 && (
+            <p className="epi-quality">
+              {fmt(summary.data.data_quality.consultations_without_diagnosis)} consultas sin diagnóstico y {fmt(summary.data.data_quality.consultations_unsigned)} sin firmar en el período. No se cuentan hasta que se codifiquen.
+            </p>
+          )}
+        </section>
+      )}
+
+      {empty ? (
+        <section className="data-card"><div className="data-card-body">
+          <InlineState message="No hay diagnósticos codificados con estos filtros. Prueba con un período más amplio o quita algún filtro.">
+            <Button variant="gray" onClick={() => set({ period: "12m", from: null, to: null, doctor: null, sex: null, age: null, chapter: null, code: null, cat: null, catl: null })}>Ver últimos 12 meses sin filtros</Button>
+          </InlineState>
+        </div></section>
+      ) : (
+        <>
+          <SegmentedControl label="Vista" segments={VIEWS} value={view} onChange={setView} className="epi-views" />
+          <div className="epi-panel" role="tabpanel" aria-label={VIEWS.find((v) => v.value === view)?.label}>
+            {view === "resumen" && (
+              <div className="epi-two">
+                {trendCard}
+                {topCard(5)}
+              </div>
+            )}
+            {view === "tendencias" && <>
+              {trendCard}
+              <SeasonalityHeatmap filters={filters} categories={seasonKeys} />
+              <PatientFlowCard filters={filters} />
+            </>}
+            {view === "diagnosticos" && topCard(10)}
+            {view === "distribucion" && <>
+              {breakdownCard}
+              {isAdmin && <DoctorCompareCard filters={filters} />}
+            </>}
+            {view === "hallazgos" && (
+          <InsightsCard filters={filters} activeKey={ctl.params.get("cat")} onOpenCode={(code, description) => setDrill({ code, description })}
+                onCategory={filterCategory} />
+            )}
           </div>
         </>
       )}

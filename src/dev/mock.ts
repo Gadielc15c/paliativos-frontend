@@ -1,6 +1,7 @@
 import { httpClient } from "../services/http";
 import { getPermissionsForRole, type AuthSession } from "../services/auth";
 import { clinicalMock, notFound } from "./mockClinical";
+import { installAgentMock } from "./mockAgent";
 import type { PatientRecord, DoctorRecord, EpisodeRecord, InvoiceRecord, DocumentRecord, PatientProfileResponse } from "../types/api";
 
 const stamp = "2026-10-02T14:30:00-04:00";
@@ -75,6 +76,20 @@ export function installPreview() {
       await new Promise((r) => setTimeout(r, path.endsWith("/transcribe") ? 900 : path.startsWith("/ai/") ? 420 : 80));
       return {data: clinical, status: 200, statusText: "OK", headers: {}, config};
     }
+    // "Nuevo paciente": created in memory (same rules as the backend: unique document, doctor from the session).
+    if (method === "post" && path === "/patients") {
+      const doc = String(body.document_number ?? "").replace(/[^0-9a-z]/gi, "").toLowerCase();
+      if (patients.some((p) => p.document_number.replace(/[^0-9a-z]/gi, "").toLowerCase() === doc)) {
+        throw {response: {status: 409, data: {error: {code: "CONFLICT", message: "Ya existe un paciente con este documento."}}}};
+      }
+      const created: PatientRecord = { id: `patient-new-${Date.now()}`, doctor_id: String(body.doctor_id ?? previewSession.user.doctorId ?? "doctor-1"), created_by_user_id: "preview-user",
+        first_name: String(body.first_name), last_name: String(body.last_name), full_name: `${body.first_name} ${body.last_name}`, document_number: String(body.document_number),
+        birth_date: (body.birth_date as string) ?? null, gender: (body.gender as PatientRecord["gender"]) ?? null, phone: (body.phone as string) ?? null, secondary_phone: (body.secondary_phone as string) ?? null,
+        address: (body.address as string) ?? null, insurer_name: (body.insurer_name as string) ?? null, status: "active", notes: (body.notes as string) ?? null, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+      patients.unshift(created);
+      await new Promise((r) => setTimeout(r, 250));
+      return {data: created, status: 201, statusText: "Created", headers: {}, config};
+    }
     if (config.method !== "get") throw new Error("Previsualización: las modificaciones no se guardan.");
     if (path.endsWith("/profile")) data = profile(parts[1]);
     else if (path.endsWith("/reconciliations")) data = [];
@@ -99,4 +114,6 @@ export function installPreview() {
     if (data === undefined) throw new Error(`Mock sin fixture: ${path}`);
     return {data, status: 200, statusText: "OK", headers: {}, config};
   };
+  // Asistente: /agent/* JSON + the SSE chat stream.
+  installAgentMock();
 }

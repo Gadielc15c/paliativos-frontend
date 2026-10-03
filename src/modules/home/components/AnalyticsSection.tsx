@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import NumberFlow from "@number-flow/react";
 import { ArrowDownRight, ArrowUpRight, ChevronRight, Minus, Table2 } from "lucide-react";
@@ -8,6 +8,7 @@ import Pill from "../../../components/common/Pill";
 import AiPill from "../../../components/clinical/AiPill";
 import InlineState from "../../../components/clinical/InlineState";
 import DataList from "../../../components/common/DataList";
+import SegmentedControl from "../../../components/common/SegmentedControl";
 import { dashboardEndpoints } from "../../../services/endpoints/dashboard";
 import { label } from "../../../utils/labels";
 import type { DashboardActivity, DashboardKpis, DashboardQuality, DeltaMetric } from "../../../types/dashboard";
@@ -21,27 +22,30 @@ function Delta({ m }: { m: DeltaMetric }) {
   return <span className="home-delta" data-dir={d.dir}><Icon size={14} aria-hidden="true" />{d.text}</span>;
 }
 
-function Tile({ label: l, value, foot, decimals = 0 }: { label: string; value: number | null; foot?: ReactNode; decimals?: number }) {
+function Tile({ label: l, value, delta, foot, decimals = 0 }: { label: string; value: number | null; delta?: ReactNode; foot?: ReactNode; decimals?: number }) {
   return (
     <div className="home-kpi">
       <span className="home-kpi-label">{l}</span>
-      {value === null ? <span className="home-kpi-value">—</span> : (
-        <NumberFlow className="home-kpi-value" value={value} locales="es-DO" format={{ maximumFractionDigits: decimals }} />
-      )}
-      {foot && <span className="home-kpi-foot">{foot}</span>}
+      <span className="home-kpi-main">
+        {value === null ? <span className="home-kpi-value">—</span> : (
+          <NumberFlow className="home-kpi-value" value={value} locales="es-DO" format={{ maximumFractionDigits: decimals }} />
+        )}
+        {delta}
+        {foot && <span className="home-kpi-foot">{foot}</span>}
+      </span>
     </div>
   );
 }
 
 function KpiRow({ k, loading }: { k?: DashboardKpis; loading: boolean }) {
-  if (loading || !k) return <div className="home-kpis">{[0, 1, 2, 3].map((i) => <span key={i} className="skeleton" style={{ height: 116 }} />)}</div>;
+  if (loading || !k) return <div className="home-kpis">{[0, 1, 2, 3].map((i) => <span key={i} className="skeleton" style={{ height: 92 }} />)}</div>;
   return (
     <div className="home-kpis">
-      <Tile label="Consultas" value={k.consultations.value} foot={<><Delta m={k.consultations} /><span className="home-kpi-prev">vs 30 días previos</span></>} />
-      <Tile label="Pacientes nuevos" value={k.new_patients.value} foot={<><Delta m={k.new_patients} /><span className="home-kpi-prev">vs 30 días previos</span></>} />
-      <Tile label="Pacientes activos" value={k.active_patients} foot={<span className="home-kpi-prev">{fmt(k.patients_seen)} atendidos en el período</span>} />
-      <Tile label="Días entre consultas" value={k.median_days_between_consultations} decimals={1}
-        foot={<span className="home-kpi-prev">mediana por paciente{k.avg_consultations_per_patient !== null ? ` · ${fmtDec(k.avg_consultations_per_patient)} consultas c/u` : ""}</span>} />
+      <Tile label="Consultas" value={k.consultations.value} delta={<Delta m={k.consultations} />} foot={<span className="home-kpi-prev">vs 30 días antes</span>} />
+      <Tile label="Pacientes nuevos" value={k.new_patients.value} delta={<Delta m={k.new_patients} />} foot={<span className="home-kpi-prev">vs 30 días antes</span>} />
+      <Tile label="Pacientes activos" value={k.active_patients} foot={<span className="home-kpi-prev">{fmt(k.patients_seen)} atendidos</span>} />
+      <Tile label="Días entre consultas (mediana)" value={k.median_days_between_consultations} decimals={1}
+        foot={k.avg_consultations_per_patient !== null ? <span className="home-kpi-prev">{fmtDec(k.avg_consultations_per_patient)} consultas por paciente</span> : undefined} />
     </div>
   );
 }
@@ -61,14 +65,14 @@ function Card({ title, subtitle, action, className, children }: { title: ReactNo
   );
 }
 
-function ActivityCard({ q }: { q: { data?: DashboardActivity; isLoading: boolean; isError: boolean; refetch: () => unknown } }) {
+function ActivityCard({ q, compact }: { q: { data?: DashboardActivity; isLoading: boolean; isError: boolean; refetch: () => unknown }; compact?: boolean }) {
   const [table, setTable] = useState(false);
   const a = q.data;
   const unit = a?.interval === "day" ? "día" : a?.interval === "week" ? "semana" : "mes";
   return (
-    <Card title="Actividad" subtitle={a ? `Por ${unit} · ${fmt(a.totals.consultations)} consultas en el período` : "Consultas, notas firmadas y pacientes nuevos"}
+    <Card title="Actividad" subtitle={compact ? undefined : a ? `Por ${unit} · ${fmt(a.totals.consultations)} consultas en el período` : "Consultas, notas firmadas y pacientes nuevos"}
       action={a && <Button variant="gray" size="sm" onClick={() => setTable((v) => !v)} aria-pressed={table}><Table2 size={16} aria-hidden="true" /><span>{table ? "Ver gráfico" : "Ver tabla"}</span></Button>}>
-      {q.isLoading ? <span className="skeleton" style={{ height: 260 }} /> : q.isError || !a ? (
+      {q.isLoading ? <span className="skeleton" style={{ height: compact ? 168 : 260 }} /> : q.isError || !a ? (
         <InlineState kind="error" message="No se pudo cargar la actividad." onRetry={() => void q.refetch()} />
       ) : a.totals.consultations === 0 ? (
         <p className="home-empty">Todavía no hay consultas en estos 30 días. Las verás aquí en cuanto registres la primera.</p>
@@ -87,7 +91,7 @@ function ActivityCard({ q }: { q: { data?: DashboardActivity; isLoading: boolean
               <li key={s.key}><i className="home-swatch" style={{ background: s.color }} /><span>{s.label}</span><strong>{fmt(a.totals[s.key])}</strong></li>
             ))}
           </ul>
-          <ActivityChart data={a} />
+          <ActivityChart data={a} height={compact ? 156 : undefined} />
         </div>
       )}
     </Card>
@@ -119,17 +123,14 @@ function AgeCard({ k }: { k?: DashboardKpis }) {
 
 interface QualityItem { key: string; title: string; value: string; detail: string; ratio?: number | null; good: boolean; action?: { label: string; to: string } }
 
-function QualityCard({ k, quality, loading, isError, refetch }: { k?: DashboardKpis; quality?: DashboardQuality; loading: boolean; isError: boolean; refetch: () => unknown }) {
-  const navigate = useNavigate();
-  if (loading) return <Card title="Calidad de los datos"><span className="skeleton" style={{ height: 260 }} /></Card>;
-  if (isError || !quality || !k) return <Card title="Calidad de los datos"><InlineState kind="error" message="No se pudo revisar la calidad de los datos." onRetry={() => void refetch()} /></Card>;
+function qualityItems(k: DashboardKpis, quality: DashboardQuality): QualityItem[] {
   const uncoded = k.coded_cie10.denominator - k.coded_cie10.numerator;
   const unsigned = k.signed.denominator - k.signed.numerator;
   const ft = quality.free_text_diagnoses;
   const ms = quality.missing_soap;
   const missingSections = Object.entries(ms.by_section).filter(([, n]) => n > 0).map(([s, n]) => `${label("soapSection", s)} (${fmt(n)})`);
   const dup = quality.duplicate_patients;
-  const items: QualityItem[] = [
+  return [
     { key: "coded", title: "Consultas con CIE-10", value: fmtPctValue(k.coded_cie10.pct), ratio: k.coded_cie10.pct, good: uncoded === 0,
       detail: uncoded ? `${fmt(uncoded)} sin código: no cuentan en Epidemiología.` : "Todas las consultas tienen diagnóstico codificado.",
       action: uncoded ? { label: "Codificar", to: "/patients?filter=missing_diagnosis" } : undefined },
@@ -146,24 +147,48 @@ function QualityCard({ k, quality, loading, isError, refetch }: { k?: DashboardK
       detail: dup.length ? `${dup[0].patients.map((p) => p.display_name).join(" y ")} ${dup[0].reason === "document" ? "comparten documento" : "tienen el mismo nombre y nacimiento"}.` : "No se encontraron fichas repetidas.",
       action: dup[0] ? { label: "Revisar", to: `/patients?patientId=${dup[0].patients[0].id}` } : undefined },
   ];
+}
+
+function QualityRows({ items, compact }: { items: QualityItem[]; compact?: boolean }) {
+  const navigate = useNavigate();
   return (
-    <Card title="Calidad de los datos" subtitle="Menos texto libre, menos errores: cada punto tiene su arreglo">
-      <ul className="home-quality">
-        {items.map((it) => (
-          <li key={it.key} className="home-quality-row" data-good={it.good}>
-            <span className="home-quality-copy">
-              <span className="home-quality-head"><span className="home-quality-title">{it.title}</span><strong className="home-quality-value">{it.value}</strong></span>
-              {it.ratio !== undefined && it.ratio !== null && (
-                <span className="home-meter" aria-hidden="true"><span style={{ width: `${Math.min(100, Math.max(0, it.ratio))}%` }} /></span>
-              )}
-              <span className="home-quality-detail">{it.detail}</span>
-            </span>
-            {it.action ? (
-              <Button variant="tinted" size="sm" className="home-quality-action" onClick={() => navigate(it.action!.to)}>{it.action.label}</Button>
-            ) : <Pill tone="success">Al día</Pill>}
-          </li>
-        ))}
-      </ul>
+    <ul className="home-quality" data-compact={compact || undefined}>
+      {items.map((it) => (
+        <li key={it.key} className="home-quality-row" data-good={it.good}>
+          <span className="home-quality-copy">
+            <span className="home-quality-head"><span className="home-quality-title">{it.title}</span><strong className="home-quality-value">{it.value}</strong></span>
+            {!compact && it.ratio !== undefined && it.ratio !== null && (
+              <span className="home-meter" aria-hidden="true"><span style={{ width: `${Math.min(100, Math.max(0, it.ratio))}%` }} /></span>
+            )}
+            <span className="home-quality-detail" title={it.detail}>{it.detail}</span>
+          </span>
+          {it.action ? (
+            <Button variant="tinted" size="sm" className="home-quality-action" onClick={() => navigate(it.action!.to)}>{it.action.label}</Button>
+          ) : <Pill tone="success">Al día</Pill>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function QualityCard({ k, quality, loading, isError, refetch }: { k?: DashboardKpis; quality?: DashboardQuality; loading: boolean; isError: boolean; refetch: () => unknown }) {
+  if (loading) return <Card title="Calidad de los datos"><span className="skeleton" style={{ height: 260 }} /></Card>;
+  if (isError || !quality || !k) return <Card title="Calidad de los datos"><InlineState kind="error" message="No se pudo revisar la calidad de los datos." onRetry={() => void refetch()} /></Card>;
+  return (
+    <Card title="Calidad de los datos · cada punto tiene su arreglo">
+      <QualityRows items={qualityItems(k, quality)} />
+    </Card>
+  );
+}
+
+/** Resumen: what to fix first (up to 3 open quality points). */
+function ToReviewCard({ k, quality, onAll }: { k?: DashboardKpis; quality?: DashboardQuality; onAll: () => void }) {
+  if (!k || !quality) return <Card title="Por revisar"><span className="skeleton" style={{ height: 190 }} /></Card>;
+  const open = qualityItems(k, quality).filter((i) => !i.good);
+  return (
+    <Card title="Por revisar" subtitle={open.length ? `${fmt(open.length)} ${open.length === 1 ? "punto de calidad abierto" : "puntos de calidad abiertos"}` : "Calidad de los datos"}
+      action={open.length > 3 ? <Button variant="gray" size="sm" onClick={onAll}>Ver todo</Button> : undefined}>
+      {open.length === 0 ? <p className="home-empty">Todo al día: notas firmadas, codificadas y sin duplicados.</p> : <QualityRows items={open.slice(0, 3)} compact />}
     </Card>
   );
 }
@@ -196,10 +221,13 @@ function AiCard({ k }: { k?: DashboardKpis }) {
 
 function WorkloadCard({ a }: { a?: DashboardActivity }) {
   const navigate = useNavigate();
-  const rows = a?.workload ?? [];
-  const max = Math.max(1, ...rows.map((r) => r.consultations));
+  const [all, setAll] = useState(false);
+  const allRows = a?.workload ?? [];
+  const rows = all ? allRows : allRows.slice(0, 5);
+  const max = Math.max(1, ...allRows.map((r) => r.consultations));
   return (
-    <Card title="Carga por médico" subtitle="Consultas del período, pacientes activos y notas sin firmar">
+    <Card title="Carga por médico" subtitle="Consultas del período, pacientes activos y notas sin firmar"
+      action={allRows.length > 5 ? <Button variant="gray" size="sm" aria-expanded={all} onClick={() => setAll((v) => !v)}>{all ? "Ver menos" : `Ver todos (${fmt(allRows.length)})`}</Button> : undefined}>
       {!a ? <span className="skeleton" style={{ height: 200 }} /> : rows.length === 0 ? (
         <p className="home-empty">Sin médicos con actividad. Agrega profesionales desde Administración › Equipo.</p>
       ) : (
@@ -207,7 +235,7 @@ function WorkloadCard({ a }: { a?: DashboardActivity }) {
           {rows.map((r) => (
             <li key={r.doctor_id} className="home-work-row" data-inactive={!r.is_active || undefined}>
               <span className="home-work-name">
-                <strong>{r.doctor_name}</strong>
+                <strong title={r.doctor_name}>{r.doctor_name}</strong>
                 {!r.is_active && <Pill tone="warning">Inactivo</Pill>}
               </span>
               <span className="home-work-bar">
@@ -230,27 +258,49 @@ function WorkloadCard({ a }: { a?: DashboardActivity }) {
   );
 }
 
-/** Analytics for clinical roles (kpis/activity/quality need clinical:read). */
+type Panel = "resumen" | "actividad" | "calidad" | "ia" | "equipo";
+const PANELS: Panel[] = ["resumen", "actividad", "calidad", "ia", "equipo"];
+
+/** Analytics for clinical roles (kpis/activity/quality need clinical:read). KPIs always visible; one panel at a time. */
 export default function AnalyticsSection({ isAdmin }: { isAdmin: boolean }) {
+  const [params, setParams] = useSearchParams();
+  const raw = params.get("panel") as Panel | null;
+  const panel: Panel = raw && PANELS.includes(raw) && (raw !== "equipo" || isAdmin) ? raw : "resumen";
+  const setPanel = (p: Panel) => setParams((prev) => { const n = new URLSearchParams(prev); if (p === "resumen") n.delete("panel"); else n.set("panel", p); return n; }, { replace: true });
   const kpis = useQuery({ queryKey: ["dashboard", "kpis"], queryFn: () => dashboardEndpoints.kpis(), staleTime: 5 * 60 * 1000, retry: 1 });
   const activity = useQuery({ queryKey: ["dashboard", "activity"], queryFn: () => dashboardEndpoints.activity(), staleTime: 5 * 60 * 1000, retry: 1 });
   const quality = useQuery({ queryKey: ["dashboard", "quality"], queryFn: () => dashboardEndpoints.quality(), staleTime: 5 * 60 * 1000, retry: 1 });
+  const segments = [
+    { value: "resumen" as const, label: "Resumen" },
+    { value: "actividad" as const, label: "Actividad" },
+    { value: "calidad" as const, label: "Calidad" },
+    { value: "ia" as const, label: "IA" },
+    ...(isAdmin ? [{ value: "equipo" as const, label: "Equipo" }] : []),
+  ];
+  const refetchQuality = () => { void quality.refetch(); void kpis.refetch(); };
 
   return (
     <section className="home-section" aria-labelledby="home-analytics-title">
       <header className="home-section-head">
         <h2 id="home-analytics-title" className="home-section-title">Tu práctica en números</h2>
-        <p className="home-section-meta">Últimos 30 días</p>
+        <p className="home-section-meta home-section-meta-grow">Últimos 30 días</p>
+        <SegmentedControl label="Análisis" segments={segments} value={panel} onChange={setPanel} className="home-panels-tabs" />
       </header>
       {kpis.isError ? (
         <div className="data-card"><div className="data-card-body"><InlineState kind="error" message="No se pudieron cargar los indicadores." onRetry={() => void kpis.refetch()} /></div></div>
       ) : <KpiRow k={kpis.data} loading={kpis.isLoading} />}
-      <div className="home-grid">
-        <div className="home-span-8"><ActivityCard q={activity} /></div>
-        <div className="home-span-4"><AgeCard k={kpis.data} /></div>
-        <div className="home-span-7"><QualityCard k={kpis.data} quality={quality.data} loading={quality.isLoading || kpis.isLoading} isError={quality.isError || kpis.isError} refetch={() => { void quality.refetch(); void kpis.refetch(); }} /></div>
-        <div className="home-span-5"><AiCard k={kpis.data} /></div>
-        {isAdmin && <div className="home-span-12"><WorkloadCard a={activity.data} /></div>}
+      <div className="home-grid home-panel" role="tabpanel" aria-label={segments.find((s) => s.value === panel)?.label}>
+        {panel === "resumen" && <>
+          <div className="home-span-7"><ActivityCard q={activity} compact /></div>
+          <div className="home-span-5"><ToReviewCard k={kpis.data} quality={quality.data} onAll={() => setPanel("calidad")} /></div>
+        </>}
+        {panel === "actividad" && <>
+          <div className="home-span-8"><ActivityCard q={activity} /></div>
+          <div className="home-span-4"><AgeCard k={kpis.data} /></div>
+        </>}
+        {panel === "calidad" && <div className="home-span-12"><QualityCard k={kpis.data} quality={quality.data} loading={quality.isLoading || kpis.isLoading} isError={quality.isError || kpis.isError} refetch={refetchQuality} /></div>}
+        {panel === "ia" && <div className="home-span-12"><AiCard k={kpis.data} /></div>}
+        {panel === "equipo" && isAdmin && <div className="home-span-12"><WorkloadCard a={activity.data} /></div>}
       </div>
     </section>
   );

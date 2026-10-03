@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertCircle, Check, CloudOff, FilePlus2, Loader2, Lock, Mic, PenLine, Sparkles } from "lucide-react";
+import { AlertCircle, Check, CloudOff, FilePlus2, Loader2, Lock, Mic, PenLine, Plus, Sparkles } from "lucide-react";
 import PageHeader from "../../../components/common/PageHeader";
 import Button from "../../../components/common/Button";
 import Pill from "../../../components/common/Pill";
@@ -90,6 +90,12 @@ export default function ConsultationPage() {
   }, [qc, consultationId]); // eslint-disable-line react-hooks/exhaustive-deps
   const openRecord = () => { if (ensureRecordable()) { setComposeOpen(false); setConsentOpen(true); } };
   const [amend, setAmend] = useState({ content: "", reason: "" });
+  // Empty optional sections collapse to a one-line "+ Añadir …" row until opened.
+  const [opened, setOpened] = useState<Set<SoapField>>(() => new Set());
+  const openSection = (f: SoapField) => {
+    setOpened((prev) => new Set(prev).add(f));
+    requestAnimationFrame(() => document.getElementById(`soap-${f}`)?.focus());
+  };
   const stacked = useMediaQuery("(max-width: 1100px)");
   const [ctxCollapsed, setCtxCollapsed] = useState(() => window.matchMedia("(max-width: 1100px)").matches);
   const [transcriptEl, setTranscriptEl] = useState<HTMLDivElement | null>(null);
@@ -253,25 +259,39 @@ export default function ConsultationPage() {
               <h2 id="consult-note-title" className="consult-note-title">Nota de la consulta</h2>
               {!editable && <Pill tone="neutral">Solo lectura</Pill>}
             </header>
-            {SOAP_FIELDS.map((f) => (
-              <Fragment key={f}>
-                <section className="note-section">
-                  <div className="note-section-head">
-                    <label htmlFor={`soap-${f}`} className="note-section-title">{SOAP_LABELS[f]}</label>
-                    {editable && REQUIRED.includes(f) && (
-                      draft?.[f]?.trim() ? <span className="note-req is-done"><Check size={14} aria-hidden="true" />Completo</span> : <span className="note-req">Necesario para firmar</span>
-                    )}
-                  </div>
-                  {editable && draft ? (
-                    <AutoTextarea id={`soap-${f}`} minRows={f === "chief_complaint" ? 1 : 2} value={draft[f]} placeholder={HINTS[f]}
-                      onChange={(e) => setField(f, e.target.value)} onBlur={() => void flush()} />
+            {SOAP_FIELDS.map((f) => {
+              const empty = editable ? !draft?.[f]?.trim() : !consultation[f]?.trim();
+              const collapsed = empty && !REQUIRED.includes(f) && !opened.has(f);
+              return (
+                <Fragment key={f}>
+                  {collapsed ? (
+                    editable ? (
+                      <button type="button" className="note-section-add" onClick={() => openSection(f)}>
+                        <Plus size={16} aria-hidden="true" /><span>Añadir {SOAP_LABELS[f].toLowerCase()}</span>
+                      </button>
+                    ) : (
+                      <p className="note-section-empty"><span>{SOAP_LABELS[f]}</span><em>Sin registrar</em></p>
+                    )
                   ) : (
-                    <p id={`soap-${f}`} className="consult-field-read">{consultation[f] || <em>Sin registrar</em>}</p>
+                    <section className="note-section">
+                      <div className="note-section-head">
+                        <label htmlFor={`soap-${f}`} className="note-section-title">{SOAP_LABELS[f]}</label>
+                        {editable && REQUIRED.includes(f) && (
+                          draft?.[f]?.trim() ? <span className="note-req is-done"><Check size={14} aria-hidden="true" />Completo</span> : <span className="note-req">Necesario para firmar</span>
+                        )}
+                      </div>
+                      {editable && draft ? (
+                        <AutoTextarea id={`soap-${f}`} minRows={f === "chief_complaint" ? 1 : 2} value={draft[f]} placeholder={HINTS[f]}
+                          onChange={(e) => setField(f, e.target.value)} onBlur={() => void flush()} />
+                      ) : (
+                        <p id={`soap-${f}`} className="consult-field-read">{consultation[f] || <em>Sin registrar</em>}</p>
+                      )}
+                    </section>
                   )}
-                </section>
-                {f === "assessment" && stacked && <div className="consult-dx-inline">{dxCard}</div>}
-              </Fragment>
-            ))}
+                  {f === "assessment" && stacked && <div className="consult-dx-inline">{dxCard}</div>}
+                </Fragment>
+              );
+            })}
 
             {editable && canSign && (
               <footer className="consult-sign" aria-labelledby="consult-sign-title">

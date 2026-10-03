@@ -44,6 +44,7 @@ const PERMISSIONS_BY_ROLE: Record<User["role"], Permission[]> = {
   ],
   secretary: [
     "patients:read",
+    "patients:write",
     "billing:read",
     "documents:read",
   ],

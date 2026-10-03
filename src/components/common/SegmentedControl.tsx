@@ -4,6 +4,8 @@ import clsx from "clsx";
 export interface Segment<V extends string> {
   value: V;
   label: string;
+  /** Shorter label used on phones (≤480px) when the full one would not fit. */
+  short?: string;
   badge?: number;
 }
 
@@ -45,11 +47,14 @@ export default function SegmentedControl<V extends string>({ segments, value, on
           type="button"
           role="tab"
           aria-selected={s.value === value}
+          aria-label={s.short ? s.label : undefined}
           tabIndex={s.value === value ? 0 : -1}
           className="segmented-item"
           onClick={() => onChange(s.value)}
         >
-          <span className="segmented-label">{s.label}</span>
+          {s.short ? (
+            <><span className="segmented-label seg-full">{s.label}</span><span className="segmented-label seg-short" aria-hidden="true">{s.short}</span></>
+          ) : <span className="segmented-label">{s.label}</span>}
           {typeof s.badge === "number" && s.badge > 0 && <span className="segmented-badge">{s.badge}</span>}
         </button>
       ))}

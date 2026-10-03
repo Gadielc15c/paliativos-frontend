@@ -1,3 +1,4 @@
+import SegmentedControl from "../../../components/common/SegmentedControl";
 import Pill from "../../../components/common/Pill";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -90,6 +91,7 @@ const normalizeServiceStatus = (value: unknown): "ok" | "degraded" | "down" | "u
 };
 
 export default function ConfigPage() {
+  const [tab, setTab] = useState<"tema" | "color" | "componentes" | "sistema">("tema");
   const navigate = useNavigate();
   const { theme, setTheme, preferences, setPreference, resetPreferences } = useTheme();
   const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
@@ -145,6 +147,10 @@ export default function ConfigPage() {
         actions={<Button variant="gray" onClick={resetPreferences}>Restaurar valores iniciales</Button>}
       />
 
+      <SegmentedControl label="Secciones de ajustes" value={tab} onChange={setTab} className="config-tabs"
+        segments={[{ value: "tema", label: "Tema" }, { value: "color", label: "Color" }, { value: "componentes", label: "Componentes", short: "Estilo" }, { value: "sistema", label: "Sistema" }]} />
+      {tab === "tema" && (
+        <>
       <section className="config-grid">
         <article className="data-card">
           <header className="data-card-header">
@@ -210,6 +216,10 @@ export default function ConfigPage() {
         </article>
       </section>
 
+        </>
+      )}
+      {tab === "color" && (
+        <>
       <section className="config-grid">
         <article className="data-card">
           <header className="data-card-header">
@@ -343,6 +353,10 @@ export default function ConfigPage() {
         </article>
       </section>
 
+        </>
+      )}
+      {tab === "componentes" && (
+        <>
       <section className="config-grid">
         <article className="data-card">
           <header className="data-card-header">
@@ -471,6 +485,10 @@ export default function ConfigPage() {
         </article>
       </section>
 
+        </>
+      )}
+      {tab === "sistema" && (
+        <>
       <section className="data-card">
         <header className="data-card-header">
           <div>
@@ -502,6 +520,8 @@ export default function ConfigPage() {
           )}
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 }

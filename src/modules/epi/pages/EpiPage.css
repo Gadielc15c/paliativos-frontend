@@ -292,3 +292,33 @@ button.bar-row.has-rank { grid-template-columns: 24px minmax(0, 1fr) auto 18px; 
   .heatmap-label { font-size: .8125rem; padding-right: 8px; }
 }
 @media (max-width: 768px) { .page-header-actions:has(.epi-ask-jump) { display: none; } }
+
+/* ---- Views (one panel at a time; "Lo importante" + KPIs stay on top) ---- */
+.epi-page { gap: 24px; }
+.epi-views { max-width: 720px; }
+.epi-panel { display: grid; gap: 20px; min-width: 0; }
+.epi-panel > .data-card { grid-column: auto; }
+.epi-card-foot { padding: 0 24px 20px; }
+.epi-kpis { gap: 12px; }
+.epi-kpi { gap: 4px; padding: 14px 18px; border-radius: 16px; }
+.epi-kpi-label { font-size: .875rem; }
+.epi-kpi-value { font-size: 1.75rem; }
+@media (max-width: 768px) {
+  .epi-views { max-width: none; }
+  .epi-card-foot { padding: 0 16px 16px; }
+  .epi-kpi { padding: 12px 14px; }
+  .epi-kpi-value { font-size: 1.5rem; }
+}
+/* Compact rhythm (scroll pass) */
+.epi-highlights-title { font-size: 1.1875rem; }
+.epi-highlight { padding: 10px 0; }
+.epi-highlight-line { font-size: 1rem; }
+.bar-list { gap: 8px; }
+.bar-row { padding: 4px 12px; }
+.bar-copy { gap: 4px; }
+.epi-ask-body { gap: 14px; }
+.epi-suggestions { flex-wrap: nowrap; overflow-x: auto; margin: 0 -24px; padding: 2px 24px 4px; scrollbar-width: none; }
+.epi-suggestions::-webkit-scrollbar { display: none; }
+.epi-suggestions > * { flex: none; }
+@media (max-width: 768px) { .epi-suggestions { margin: 0 -16px; padding: 2px 16px 4px; } }
+@media (max-width: 480px) { .epi-views .segmented-item { padding: 6px 2px; font-size: .75rem; } }
