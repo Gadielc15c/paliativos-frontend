@@ -1,0 +1,2 @@
+.audit-entity { display: grid; gap: 2px; }
+.audit-actor { color: var(--muted-foreground); font-weight: 400; font-size: .8125rem; }

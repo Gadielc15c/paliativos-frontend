@@ -1,4 +1,5 @@
 import { httpClient } from "../http";
+import type { ConsultationRead, SoapNote } from "../../types/clinical";
 import type {
   ConsultationRecord,
   DiagnosticRecord,
@@ -10,16 +11,16 @@ type PrescriptionStatus = "active" | "suspended" | "completed" | "discontinued";
 export const consultationsEndpoints = {
   create: async (data: {
     patient_id: string;
-    date?: string;
-    reason?: string | null;
+    consultation_date?: string;
+    reason: string;
     notes?: string | null;
   }) => {
     const response = await httpClient.post<ConsultationRecord>("/consultations", data);
     return response.data;
   },
   listByPatient: async (patientId: string) => {
-    const response = await httpClient.get<ConsultationRecord[]>(
-      `/consultations/${patientId}`
+    const response = await httpClient.get<ConsultationRead[]>(
+      `/consultations/patient/${patientId}`
     );
     return response.data;
   },
@@ -80,3 +81,17 @@ export const prescriptionsEndpoints = {
   },
 };
 
+/** Fase 1 SOAP lifecycle: draft (autosave with optimistic version) -> signed -> amendments. */
+export const soapEndpoints = {
+  create: async (data: { patient_id: string; consultation_date?: string; chief_complaint?: string | null }) =>
+    (await httpClient.post<ConsultationRead>("/consultations", data)).data,
+  get: async (id: string) => (await httpClient.get<ConsultationRead>(`/consultations/${id}`)).data,
+  listByPatient: async (patientId: string) =>
+    (await httpClient.get<ConsultationRead[]>(`/consultations/patient/${patientId}`)).data,
+  patch: async (id: string, version: number, fields: Partial<SoapNote> & { reason?: string; notes?: string | null }) =>
+    (await httpClient.patch<ConsultationRead>(`/consultations/${id}`, { version, ...fields })).data,
+  sign: async (id: string, version?: number) =>
+    (await httpClient.post<ConsultationRead>(`/consultations/${id}/sign`, version ? { version } : {})).data,
+  amend: async (id: string, content: string, reason?: string) =>
+    (await httpClient.post<ConsultationRead>(`/consultations/${id}/amendments`, { content, reason: reason || null })).data,
+};

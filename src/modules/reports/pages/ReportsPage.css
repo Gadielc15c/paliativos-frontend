@@ -1,3 +1,1 @@
-.reports-page .data-card {
-  min-height: 100%;
-}
+.reports-page { gap: 32px; }

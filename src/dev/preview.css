@@ -1,0 +1,7 @@
+.preview-toolbar { position: fixed; bottom: 12px; right: 16px; z-index: 1100; max-width: calc(100% - 32px); padding: 8px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-md); font-size: 13px; }
+.preview-toolbar button { border: 0; border-radius: 10px; padding: 10px 18px; background: var(--surface-muted); color: var(--foreground); font-size: 13px; }
+.preview-options { display: grid; gap: 12px; padding: 12px; max-width: 400px; }
+.segmented-control { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; border-radius: 12px; background: var(--surface-muted); }
+.segmented-control button { background: transparent; }
+.segmented-control button[aria-pressed="true"] { background: var(--surface); box-shadow: var(--card-shadow); }
+@media (max-width: 768px) { .preview-toolbar { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); right: 12px; padding: 4px; } }

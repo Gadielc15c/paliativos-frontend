@@ -1,325 +1,59 @@
-/* Patients Page Layout - 2-column split - RESPONSIVE */
-
+/* Patients: master (list) + detail (profile). One column on phones, never both at once. */
 .patients-page {
   display: grid;
-  grid-template-columns: minmax(300px, 34%) minmax(0, 1fr);
-  height: 100%;
-  min-height: 0;
-  gap: 0;
-  overflow: hidden;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
 }
-
-.patients-page.patient-focus-mode {
-  grid-template-columns: minmax(92px, 10%) minmax(0, 1fr);
-}
+.patients-page.patient-focus-mode.has-selection { grid-template-columns: minmax(0, 1fr); }
+.patients-page.patient-focus-mode.has-selection .patients-list-column { display: none; }
 
 .patients-list-column {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: var(--bg-main);
-  border-right: 1px solid var(--border-subtle);
-  overflow: hidden;
-  animation: slideInLeft 0.4s ease-out;
+  position: sticky; top: 0;
+  display: grid; gap: 16px; align-content: start;
+  max-height: calc(100dvh - 64px - 64px);
+  overflow-y: auto; overscroll-behavior: contain;
+  margin: -4px; padding: 4px 4px 8px;
 }
+.patients-list-head { display: grid; gap: 4px; padding: 0 4px; }
+.patients-list-title { margin: 0; font-size: var(--text-large-title); line-height: 1.15; letter-spacing: -.03em; font-weight: 700; }
+.patients-list-count { color: var(--muted-foreground); font-size: .9375rem; }
 
-.patients-search-bar {
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
+.patients-profile-column { display: grid; gap: 24px; align-content: start; min-width: 0; }
 
-@media (max-width: 768px) {
-  .patients-search-bar {
-    padding: var(--space-3);
-  }
-}
+.patients-focus-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
+.patients-back { display: none; }
 
-.search-input {
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  background-color: var(--bg-main);
-  color: var(--text-primary);
-  font-size: var(--text-sm);
-  font-family: var(--font-mono);
-  transition: all 0.2s;
-}
+.patients-inline-actions { padding: 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--card-shadow); }
 
-.search-input::placeholder {
-  color: var(--text-subtle);
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  background-color: var(--bg-elevated);
-  box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.1);
-}
-
-.patients-list-column > div:nth-child(2) {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.patients-profile-column {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-width: 0;
-  background-color: var(--bg-main);
-  border-right: 1px solid var(--border-subtle);
-  padding: var(--space-4);
-  overflow-y: auto;
-  animation: slideInUp 0.4s ease-out 0.1s backwards;
-}
-
-.patients-page.patient-focus-mode .patients-list-column {
-  min-width: 92px;
-}
-
-.patients-page.patient-focus-mode .patients-search-bar {
-  display: none;
-}
-
-.patients-page.patient-focus-mode .patient-list-header h2 {
-  font-size: 0;
-}
-
-.patients-page.patient-focus-mode .patient-list-header h2::after {
-  content: "Pac.";
-  font-size: var(--text-sm);
-}
-
-.patients-page.patient-focus-mode .patient-list-item {
-  padding: var(--space-2);
-}
-
-.patients-page.patient-focus-mode .patient-list-item .label,
-.patients-page.patient-focus-mode .patient-list-item-row:not(.name):not(.doc) {
-  display: none;
-}
-
-.patients-page.patient-focus-mode .patient-list-item-row.name .value {
-  font-size: var(--text-xs);
-  white-space: normal;
-}
-
-.patients-focus-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
-  padding: var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, var(--border-subtle));
-  border-radius: var(--radius-md);
-  background:
-    linear-gradient(
-      125deg,
-      color-mix(in srgb, var(--accent-primary) 11%, transparent),
-      color-mix(in srgb, var(--accent-secondary) 8%, transparent)
-    );
-}
-
-.patients-focus-copy {
-  display: grid;
-  gap: 2px;
-}
-
-.patients-focus-label {
-  font-size: var(--text-xs);
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.patients-inline-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-  padding: var(--space-3);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background:
-    linear-gradient(
-      140deg,
-      color-mix(in srgb, var(--accent-primary) 10%, var(--bg-elevated)),
-      color-mix(in srgb, var(--accent-secondary) 5%, var(--bg-elevated))
-    );
-}
-
-.patients-inline-actions .button {
-  flex: 1 1 180px;
-  justify-content: center;
-}
-
-.patients-inline-action-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.patients-inline-feedback {
-  margin-bottom: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.patients-inline-feedback-success {
-  color: var(--accent-primary);
-  font-size: var(--text-sm);
-}
-
-.patients-inline-feedback-error {
-  color: var(--state-error);
-  font-size: var(--text-sm);
-}
-
-@media (max-width: 768px) {
-  .patients-profile-column {
-    padding: var(--space-3);
-  }
-
-  .patients-inline-actions {
-    padding: var(--space-2);
-  }
-
-  .patients-inline-actions .button {
-    flex: 1 1 100%;
-  }
-}
-
-/* ── Episode form ───────────────────────────────── */
+/* Inline forms */
 .patients-episode-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-sm);
-  background:
-    linear-gradient(
-      140deg,
-      color-mix(in srgb, var(--accent-primary) 9%, var(--bg-elevated)),
-      color-mix(in srgb, var(--accent-secondary) 4%, var(--bg-elevated))
-    );
-  margin-bottom: var(--space-3);
-  box-shadow: var(--shadow-sm);
+  padding: 24px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--card-shadow);
+  animation: surface-enter 220ms var(--ease-out); transform-origin: top center;
+}
+.patients-episode-form-title { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -.015em; }
+.patients-episode-form > label { display: grid; gap: 8px; font-size: .9375rem; font-weight: 500; }
+.patients-episode-form-input, .patients-episode-form-textarea { width: 100%; }
+.patients-episode-form-textarea { resize: vertical; min-height: 96px; }
+
+@media (max-width: 1100px) {
+  .patients-page { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 24px; }
 }
 
-.patients-episode-form-title {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--accent-primary);
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.patients-episode-form-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-3);
-}
-
-.patients-episode-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.patients-episode-form-input {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-sm);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  font-family: inherit;
-  width: 100%;
-  box-sizing: border-box;
-  transition: border-color 0.15s;
-}
-
-.patients-episode-form-input:focus {
-  outline: none;
-  border-color: var(--accent-primary, #2563eb);
-}
-
-.patients-episode-form-textarea {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-sm);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  font-family: inherit;
-  width: 100%;
-  box-sizing: border-box;
-  resize: vertical;
-  transition: border-color 0.15s;
-}
-
-.patients-episode-form-textarea:focus {
-  outline: none;
-  border-color: var(--accent-primary, #2563eb);
-}
-
-.patients-episode-form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
-
-/* Tablet */
-@media (max-width: 1200px) {
-  .patients-page {
-    grid-template-columns: minmax(260px, 38%) 1fr;
-  }
-
-  .patients-profile-column {
-    border-right: none;
-  }
-}
-
-/* Mobile: Stack vertically */
 @media (max-width: 768px) {
-  .patients-page {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
-  }
-
-  .patients-page.patient-focus-mode .patients-list-column {
-    display: none;
-  }
-
-  .patients-list-column {
-    max-height: 38vh;
-    min-height: 260px;
-    border-right: none;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .patients-profile-column {
-    min-height: 320px;
-    border-right: none;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .patients-focus-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .patients-page { display: block; }
+  .patients-list-column { position: static; max-height: none; overflow: visible; margin: 0; padding: 0; gap: 16px; }
+  .patients-list-title { font-size: 1.75rem; }
+  /* Phone: list OR profile. Selecting a patient pushes the profile; "‹ Pacientes" pops it. */
+  .patients-page.has-selection.patient-focus-mode .patients-list-column { display: none; }
+  .patients-page:not(.patient-focus-mode) .patients-profile-column,
+  .patients-page:not(.has-selection) .patients-profile-column { display: none; }
+  .patients-profile-column { gap: 20px; }
+  .patients-focus-header { justify-content: flex-start; margin-bottom: -8px; }
+  .patients-back { display: inline-flex; }
+  .patients-focus-toggle { display: none; }
+  .patients-inline-actions { padding: 0; background: transparent; border: 0; box-shadow: none; }
+  .patients-episode-form { padding: 20px 16px 16px; border-radius: 16px; }
 }
+.patients-filter { display: grid; gap: 6px; justify-items: start; padding: 0 4px; }
+.patients-filter-note { color: var(--muted-foreground); font-size: .8125rem; line-height: 1.45; }

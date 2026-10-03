@@ -1,10 +1,12 @@
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Empty, Loading, Error } from "../../../components/states/StateContainers";
-import Badge from "../../../components/common/Badge";
+import Pill from "../../../components/common/Pill";
 import Button from "../../../components/common/Button";
 import type { InvoiceContract } from "../../../types/contracts";
 import { formatDate, formatCurrency } from "../../../utils/format";
 import "./InvoiceDetail.css";
+import { label } from "../../../utils/labels";
 
 interface InvoiceDetailProps {
   invoice: InvoiceContract | null | undefined;
@@ -22,7 +24,7 @@ interface InvoiceDetailProps {
   }) => Promise<void>;
 }
 
-const getStatusVariant = (status: string): "success" | "warning" | "error" | "info" => {
+const getStatusVariant = (status: string): "success" | "warning" | "danger" | "info" => {
   switch (status) {
     case "paid":
       return "success";
@@ -31,7 +33,7 @@ const getStatusVariant = (status: string): "success" | "warning" | "error" | "in
     case "draft":
       return "info";
     case "cancelled":
-      return "error";
+      return "danger";
     default:
       return "info";
   }
@@ -50,47 +52,39 @@ export default function InvoiceDetail({
     useState<"draft" | "issued" | "partially_paid" | "paid" | "cancelled">("draft");
   const [notesDraft, setNotesDraft] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [itemDescription, setItemDescription] = useState("");
   const [itemQuantity, setItemQuantity] = useState("1");
   const [itemUnitPrice, setItemUnitPrice] = useState("");
   const [isAddingItem, setIsAddingItem] = useState(false);
-  const [itemError, setItemError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!invoice) return;
     setStatusDraft(invoice.status);
     setNotesDraft(invoice.notes || "");
-    setSaveMessage(null);
-    setSaveError(null);
     setIsEditing(false);
     setItemDescription("");
     setItemQuantity("1");
     setItemUnitPrice("");
-    setItemError(null);
   }, [invoice?.id]);
 
   if (isLoading) return <Loading />;
   if (isError) return <Error onRetry={onRetry} />;
-  if (!invoice) return <Empty message="Selecciona una factura" />;
+  if (!invoice) return <Empty message="Elige una factura de la lista para ver su detalle y registrar pagos." />;
 
   const handleSave = () => {
     if (!onUpdateInvoice) return;
 
     const run = async () => {
       setIsSaving(true);
-      setSaveMessage(null);
-      setSaveError(null);
       try {
         await onUpdateInvoice({
           status: statusDraft,
           notes: notesDraft.trim() || null,
         });
-        setSaveMessage("Factura actualizada.");
+        toast.success("Factura actualizada.");
         setIsEditing(false);
       } catch (error) {
-        setSaveError(
+        toast.error(
           error instanceof globalThis.Error
             ? error.message
             : "No se pudo actualizar factura."
@@ -108,32 +102,32 @@ export default function InvoiceDetail({
     const quantity = Number(itemQuantity);
     const unitPrice = Number(itemUnitPrice);
     if (!itemDescription.trim()) {
-      setItemError("Describe el item.");
+      toast.error("Describe el item.");
       return;
     }
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      setItemError("Cantidad inválida.");
+      toast.error("Cantidad inválida.");
       return;
     }
     if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
-      setItemError("Precio unitario inválido.");
+      toast.error("Precio unitario inválido.");
       return;
     }
 
     const run = async () => {
       setIsAddingItem(true);
-      setItemError(null);
       try {
         await onAddInvoiceItem({
           description: itemDescription.trim(),
           quantity,
           unitPrice,
         });
+        toast.success("Item agregado.");
         setItemDescription("");
         setItemQuantity("1");
         setItemUnitPrice("");
       } catch (error) {
-        setItemError(
+        toast.error(
           error instanceof globalThis.Error ? error.message : "No se pudo agregar item."
         );
       } finally {
@@ -147,10 +141,13 @@ export default function InvoiceDetail({
   return (
     <div className="invoice-detail">
       <div className="invoice-detail-header">
-        <h1 className="invoice-detail-number">{invoice.invoiceNumber}</h1>
-        <Badge variant={getStatusVariant(invoice.status)}>
-          {invoice.status.toUpperCase()}
-        </Badge>
+        <div className="invoice-detail-heading">
+          <span className="invoice-detail-kicker">Factura {invoice.invoiceNumber}</span>
+          <h1 className="invoice-detail-number">{invoice.patientName || invoice.patientId}</h1>
+        </div>
+        <Pill tone={getStatusVariant(invoice.status)}>
+          {label("invoiceStatus", invoice.status)}
+        </Pill>
       </div>
 
       <div className="invoice-detail-info">
@@ -192,7 +189,7 @@ export default function InvoiceDetail({
 
       <div className="invoice-detail-summary">
         <h3>Ítems</h3>
-        <div className="invoice-detail-edit">
+        <div className="invoice-detail-edit form-stack">
           <label>
             Descripción
             <input
@@ -201,7 +198,7 @@ export default function InvoiceDetail({
               placeholder="Ej: Consulta médica"
             />
           </label>
-          <div className="invoice-detail-edit-row">
+          <div className="invoice-detail-edit-row form-grid">
             <label>
               Cantidad
               <input
@@ -224,12 +221,12 @@ export default function InvoiceDetail({
               />
             </label>
           </div>
-          <div className="invoice-detail-edit-actions">
-            <Button size="sm" onClick={handleAddItem} isLoading={isAddingItem}>
+          <div className="invoice-detail-edit-actions form-actions">
+            <Button size="sm" className="glow-border" onClick={handleAddItem} isLoading={isAddingItem}>
               Agregar ítem
             </Button>
           </div>
-          {itemError && <p className="invoice-detail-feedback error">{itemError}</p>}
+
         </div>
         {invoice.items.length === 0 ? (
           <p>Sin ítems registrados.</p>
@@ -244,22 +241,20 @@ export default function InvoiceDetail({
       </div>
 
       <div className="invoice-detail-summary">
-        <div className="summary-row">
+        <div className="invoice-section-head">
           <h3>Gestión</h3>
           <Button
             size="sm"
-            variant="secondary"
+            variant="tinted"
             onClick={() => {
               setIsEditing((v) => !v);
-              setSaveMessage(null);
-              setSaveError(null);
             }}
           >
             {isEditing ? "Cerrar edición" : "Editar factura"}
           </Button>
         </div>
         {isEditing && (
-          <div className="invoice-detail-edit">
+          <div className="invoice-detail-edit form-stack">
             <label>
               Estado
               <select
@@ -275,11 +270,11 @@ export default function InvoiceDetail({
                   )
                 }
               >
-                <option value="draft">draft</option>
-                <option value="issued">issued</option>
-                <option value="partially_paid">partially_paid</option>
-                <option value="paid">paid</option>
-                <option value="cancelled">cancelled</option>
+                <option value="draft">{label("invoiceStatus", "draft")}</option>
+                <option value="issued">{label("invoiceStatus", "issued")}</option>
+                <option value="partially_paid">{label("invoiceStatus", "partially_paid")}</option>
+                <option value="paid">{label("invoiceStatus", "paid")}</option>
+                <option value="cancelled">{label("invoiceStatus", "cancelled")}</option>
               </select>
             </label>
             <label>
@@ -290,15 +285,13 @@ export default function InvoiceDetail({
                 onChange={(event) => setNotesDraft(event.target.value)}
               />
             </label>
-            <div className="invoice-detail-edit-actions">
+            <div className="invoice-detail-edit-actions form-actions">
               <Button
                 size="sm"
-                variant="secondary"
+                variant="gray"
                 onClick={() => {
                   setStatusDraft(invoice.status);
                   setNotesDraft(invoice.notes || "");
-                  setSaveError(null);
-                  setSaveMessage(null);
                 }}
               >
                 Revertir
@@ -309,8 +302,8 @@ export default function InvoiceDetail({
             </div>
           </div>
         )}
-        {saveMessage && <p className="invoice-detail-feedback success">{saveMessage}</p>}
-        {saveError && <p className="invoice-detail-feedback error">{saveError}</p>}
+
+
       </div>
 
       <div className="invoice-detail-meta">

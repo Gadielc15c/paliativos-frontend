@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Button from "../../../components/common/Button";
@@ -41,11 +42,9 @@ export default function ExtractionValidationModal({
   const [isRejecting, setIsRejecting] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [showRejectForm, setShowRejectForm] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleConfirm = async () => {
     setIsConfirming(true);
-    setError(null);
     try {
       await documentsEndpoints.validateExtraction(document.id, {
         extraction_result_id: extractionResult.id,
@@ -53,10 +52,11 @@ export default function ExtractionValidationModal({
         per_field_confidence: extractionResult.per_field_confidence,
       });
       await queryClient.invalidateQueries({ queryKey: ["documents-list-simple"] });
+      toast.success("Revisión guardada.");
       onClose();
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message || "No se pudo validar extracción.");
+      toast.error(apiError.message || "No se pudo validar extracción.");
     } finally {
       setIsConfirming(false);
     }
@@ -65,14 +65,14 @@ export default function ExtractionValidationModal({
   const handleReject = async () => {
     if (!rejectReason.trim()) return;
     setIsRejecting(true);
-    setError(null);
     try {
       await documentsEndpoints.reject(document.id, { reason: rejectReason.trim() });
       await queryClient.invalidateQueries({ queryKey: ["documents-list-simple"] });
+      toast.success("Revisión guardada.");
       onClose();
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message || "No se pudo rechazar documento.");
+      toast.error(apiError.message || "No se pudo rechazar documento.");
     } finally {
       setIsRejecting(false);
     }
@@ -133,7 +133,7 @@ export default function ExtractionValidationModal({
           </div>
         </div>
 
-        {error && <p className="extraction-modal-error">{error}</p>}
+
 
         {showRejectForm ? (
           <div className="extraction-modal-reject-form">

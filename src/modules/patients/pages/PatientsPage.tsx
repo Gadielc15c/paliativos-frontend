@@ -1,34 +1,58 @@
+import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Edit2, FileText, FolderOpen, Plus } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ChevronLeft, Edit2, FileText, FolderOpen, History, PanelLeftClose, PanelLeftOpen, Plus, Search, Stethoscope } from "lucide-react";
 import { PatientList, PatientProfile } from "../components";
+import { PROFILE_TABS, type ProfileTab } from "../components/PatientProfile";
+import Pill from "../../../components/common/Pill";
+import { useDashboardAlerts } from "../../../components/clinical/alerts";
+import { usePermission } from "../../../utils/usePermission";
+import type { AlertType } from "../../../types/dashboard";
 import { usePatients } from "../hooks";
 import Button from "../../../components/common/Button";
+import ActionBar from "../../../components/common/ActionBar";
 import {
   billingEndpoints,
   episodesEndpoints,
   patientsEndpoints,
+  soapEndpoints,
 } from "../../../services/endpoints";
 import type { ApiError } from "../../../types/common";
 import { useContextActions } from "../../../app/store/useContextActions";
 import type { ContextAction } from "../../../app/store/useContextActions";
-import { formatCurrency } from "../../../utils/format";
 import "./PatientsPage.css";
+
+/** `/patients?filter=` values (dashboard alert action routes) → pill label. */
+const FILTER_LABELS: Partial<Record<AlertType, string>> = {
+  overdue_followup: "Sin seguimiento",
+  unsigned_drafts: "Notas sin firmar",
+  missing_diagnosis: "Consultas sin CIE-10",
+  frequent_visits: "Consultas frecuentes",
+  new_symptoms: "Síntomas nuevos",
+};
 
 export default function PatientsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialPatientId = searchParams.get("patientId");
-  const initialFocusMode = searchParams.get("focus") === "1";
+  const initialFocusMode = searchParams.get("focus") === "1" || !!searchParams.get("patientId");
+  const tabParam = searchParams.get("tab") as ProfileTab | null;
+  const tab: ProfileTab = tabParam && PROFILE_TABS.includes(tabParam) ? tabParam : "summary";
+  const setTab = (next: ProfileTab) => {
+    const p = new URLSearchParams(searchParams);
+    if (next === "summary") p.delete("tab"); else p.set("tab", next);
+    setSearchParams(p, { replace: true });
+  };
+  const listFilter = searchParams.get("filter") as AlertType | null;
+  const canWriteClinical = usePermission("clinical:write");
+  const canBilling = usePermission("billing:read");
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [patientFocusMode, setPatientFocusMode] = useState(initialFocusMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeAction, setActiveAction] = useState<"episode" | "invoice" | "update" | null>(
     null
   );
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [showEpisodeForm, setShowEpisodeForm] = useState(false);
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
   const [showNotesForm, setShowNotesForm] = useState(false);
@@ -70,6 +94,28 @@ export default function PatientsPage() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // Alert filters: the list shows the patients the matching /dashboard/alerts items reference.
+  const alertsQuery = useDashboardAlerts();
+  const filterInfo = useMemo(() => {
+    if (!listFilter) return null;
+    const items = (alertsQuery.data?.items ?? []).filter((a) => a.type === listFilter);
+    const notes = new Map<string, string>();
+    items.forEach((a) => a.patients.forEach((p) => { if (!notes.has(p.id)) notes.set(p.id, p.note ?? ""); }));
+    const count = items.reduce((n, a) => n + a.count, 0);
+    return { label: FILTER_LABELS[listFilter] ?? "Filtro de alerta", notes, count, loaded: alertsQuery.isSuccess };
+  }, [listFilter, alertsQuery.data, alertsQuery.isSuccess]);
+  const visiblePatients = useMemo(() => {
+    if (!filterInfo || !patients) return patients;
+    return patients.filter((p) => filterInfo.notes.has(p.id));
+  }, [patients, filterInfo]);
+  const clearFilter = () => { const p = new URLSearchParams(searchParams); p.delete("filter"); setSearchParams(p, { replace: true }); };
+
+  const createConsultation = useMutation({
+    mutationFn: () => soapEndpoints.create({ patient_id: effectiveSelectedPatientId!, consultation_date: new Date().toISOString() }),
+    onSuccess: (c) => navigate(`/consultations/${c.id}`),
+    onError: (e) => toast.error((e as unknown as ApiError)?.message || "No se pudo crear la consulta."),
+  });
+
   const selectedPatient = patientProfile?.patient ?? null;
   const patientLoading = profileLoading;
   const patientError = profileError;
@@ -88,14 +134,6 @@ export default function PatientsPage() {
       alerts.push({
         tone: "warning",
         message: "Paciente sin aseguradora registrada. Conviene completar cobertura antes de facturar.",
-      });
-    }
-
-    const balance = parseFloat(patientProfile?.financial.outstanding_balance || "0");
-    if (balance > 0) {
-      alerts.push({
-        tone: "warning",
-        message: `Saldo pendiente acumulado: ${balance.toFixed(2)}.`,
       });
     }
 
@@ -125,9 +163,8 @@ export default function PatientsPage() {
     const next = new URLSearchParams(searchParams);
     next.set("patientId", id);
     next.set("focus", "1");
+    next.delete("tab");
     setSearchParams(next, { replace: true });
-    setActionMessage(null);
-    setActionError(null);
     setShowInvoiceForm(false);
     setShowNotesForm(false);
     setInvoiceForm({
@@ -158,8 +195,6 @@ export default function PatientsPage() {
     setShowEpisodeForm((v) => !v);
     setShowInvoiceForm(false);
     setShowNotesForm(false);
-    setActionMessage(null);
-    setActionError(null);
   };
 
   const handleSubmitEpisode = () => {
@@ -167,8 +202,6 @@ export default function PatientsPage() {
 
     const run = async () => {
       setActiveAction("episode");
-      setActionMessage(null);
-      setActionError(null);
       try {
         const episode = await episodesEndpoints.create({
           patient_id: effectiveSelectedPatientId,
@@ -180,14 +213,14 @@ export default function PatientsPage() {
           notes: episodeForm.notes.trim() || null,
           status: "open",
         });
-        setActionMessage(`Episodio creado: ${episode.id}`);
+        toast.success(`Episodio creado: ${episode.id}`);
         setShowEpisodeForm(false);
         setEpisodeForm({ episode_type: "Seguimiento", diagnosis: "", notes: "", start_date: "" });
         await refetchWorkspace();
         navigate(`/episodes?patientId=${effectiveSelectedPatientId}&episodeId=${episode.id}`);
       } catch (error) {
         const apiError = error as ApiError;
-        setActionError(apiError.message || "No se pudo crear episodio.");
+        toast.error(apiError.message || "No se pudo crear episodio.");
       } finally {
         setActiveAction(null);
       }
@@ -201,8 +234,6 @@ export default function PatientsPage() {
     setShowInvoiceForm((v) => !v);
     setShowEpisodeForm(false);
     setShowNotesForm(false);
-    setActionMessage(null);
-    setActionError(null);
     setInvoiceForm((previous) => ({
       ...previous,
       insurer_name: previous.insurer_name || selectedPatient?.insurer_name || "",
@@ -217,22 +248,20 @@ export default function PatientsPage() {
     const hasItem = invoiceForm.item_description.trim().length > 0;
 
     if (!invoiceForm.issue_date) {
-      setActionError("Define la fecha de emisión de la factura.");
+      toast.error("Define la fecha de emisión de la factura.");
       return;
     }
     if (hasItem && (!Number.isFinite(quantity) || quantity <= 0)) {
-      setActionError("La cantidad del item debe ser mayor a cero.");
+      toast.error("La cantidad del item debe ser mayor a cero.");
       return;
     }
     if (hasItem && (!Number.isFinite(unitPrice) || unitPrice <= 0)) {
-      setActionError("El precio unitario del item debe ser mayor a cero.");
+      toast.error("El precio unitario del item debe ser mayor a cero.");
       return;
     }
 
     const run = async () => {
       setActiveAction("invoice");
-      setActionMessage(null);
-      setActionError(null);
       try {
         const invoice = await billingEndpoints.createInvoice({
           patient_id: effectiveSelectedPatientId,
@@ -249,7 +278,7 @@ export default function PatientsPage() {
               ]
             : undefined,
         });
-        setActionMessage(`Factura creada: ${invoice.invoice_number}`);
+        toast.success(`Factura creada: ${invoice.invoice_number}`);
         setShowInvoiceForm(false);
         setInvoiceForm({
           issue_date: "",
@@ -263,7 +292,7 @@ export default function PatientsPage() {
         navigate(`/billing?patientId=${effectiveSelectedPatientId}&invoiceId=${invoice.id}`);
       } catch (error) {
         const apiError = error as ApiError;
-        setActionError(apiError.message || "No se pudo crear factura.");
+        toast.error(apiError.message || "No se pudo crear factura.");
       } finally {
         setActiveAction(null);
       }
@@ -277,8 +306,6 @@ export default function PatientsPage() {
     setShowNotesForm((v) => !v);
     setShowEpisodeForm(false);
     setShowInvoiceForm(false);
-    setActionMessage(null);
-    setActionError(null);
     setNotesDraft(selectedPatient.notes || "");
   };
 
@@ -287,18 +314,16 @@ export default function PatientsPage() {
 
     const run = async () => {
       setActiveAction("update");
-      setActionMessage(null);
-      setActionError(null);
       try {
         await patientsEndpoints.update(effectiveSelectedPatientId, {
           notes: notesDraft.trim() || null,
         });
         await Promise.all([refetchPatient(), refetchPatients()]);
         setShowNotesForm(false);
-        setActionMessage(`Notas del paciente ${effectiveSelectedPatientId} actualizadas.`);
+        toast.success(`Notas del paciente ${effectiveSelectedPatientId} actualizadas.`);
       } catch (error) {
         const apiError = error as ApiError;
-        setActionError(apiError.message || "No se pudo actualizar notas.");
+        toast.error(apiError.message || "No se pudo actualizar notas.");
       } finally {
         setActiveAction(null);
       }
@@ -321,7 +346,7 @@ export default function PatientsPage() {
     {
       id: "register-episode",
       label: "Registrar episodio",
-      icon: <Plus size={14} />,
+      icon: <Plus size={18} />,
       onClick: handleRegisterEpisode,
       disabled: !effectiveSelectedPatientId || activeAction !== null,
       loading: activeAction === "episode",
@@ -330,7 +355,7 @@ export default function PatientsPage() {
     {
       id: "create-invoice",
       label: "Emitir factura",
-      icon: <FileText size={14} />,
+      icon: <FileText size={18} />,
       onClick: handleCreateInvoice,
       disabled: !effectiveSelectedPatientId || activeAction !== null,
       loading: activeAction === "invoice",
@@ -339,7 +364,7 @@ export default function PatientsPage() {
     {
       id: "open-billing",
       label: "Ver facturación",
-      icon: <FileText size={14} />,
+      icon: <FileText size={18} />,
       onClick: handleOpenBilling,
       disabled: !effectiveSelectedPatientId,
       title: "Abrir facturación filtrada por paciente",
@@ -347,7 +372,7 @@ export default function PatientsPage() {
     {
       id: "open-documents",
       label: "Ver documentos",
-      icon: <FolderOpen size={14} />,
+      icon: <FolderOpen size={18} />,
       onClick: handleOpenDocuments,
       disabled: !effectiveSelectedPatientId,
       title: "Ir al módulo documental",
@@ -355,7 +380,7 @@ export default function PatientsPage() {
     {
       id: "update-data",
       label: "Actualizar notas",
-      icon: <Edit2 size={14} />,
+      icon: <Edit2 size={18} />,
       onClick: handleUpdateData,
       disabled: !effectiveSelectedPatientId || activeAction !== null,
       loading: activeAction === "update",
@@ -364,7 +389,6 @@ export default function PatientsPage() {
   ];
 
   const setContextActions = useContextActions((state) => state.setContextActions);
-  const setContextFeedback = useContextActions((state) => state.setContextFeedback);
   const setContextSummary = useContextActions((state) => state.setContextSummary);
   const setContextAlerts = useContextActions((state) => state.setContextAlerts);
   const clearContextActions = useContextActions((state) => state.clearContextActions);
@@ -375,20 +399,15 @@ export default function PatientsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveSelectedPatientId, selectedPatient, activeAction]);
 
-  useEffect(() => {
-    setContextFeedback({ message: actionMessage, error: actionError });
-  }, [actionMessage, actionError, setContextFeedback]);
 
   useEffect(() => {
     if (!selectedPatient) {
       setContextSummary(null, []);
       return;
     }
-    const financial = patientProfile?.financial;
     setContextSummary("Resumen rápido", [
       { label: "Paciente", value: selectedPatient.full_name || "Sin selección" },
       { label: "Aseguradora", value: selectedPatient.insurer_name || "Sin registro" },
-      { label: "Balance", value: formatCurrency(parseFloat(financial?.outstanding_balance || "0")) },
       { label: "Documentos", value: String(patientProfile?.recent_documents.length || 0) },
       { label: "Condiciones activas", value: String(patientProfile?.active_conditions.length || 0) },
       { label: "Prescripciones activas", value: String(patientProfile?.active_prescriptions.length || 0) },
@@ -399,74 +418,31 @@ export default function PatientsPage() {
     setContextAlerts(patientAlerts);
   }, [patientAlerts, setContextAlerts]);
 
-  return (
-    <div className={`patients-page ${patientFocusMode ? "patient-focus-mode" : ""}`}>
-      <div className="patients-list-column">
-        <div className="patients-search-bar">
-          <input
-            type="text"
-            placeholder="> buscar paciente..."
-            className="search-input"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-          />
-        </div>
-        <PatientList
-          patients={patients}
-          isLoading={patientsLoading}
-          isError={patientsError}
-          selectedId={effectiveSelectedPatientId}
-          onSelect={handleSelectPatient}
-          onRetry={refetchPatients}
-        />
-      </div>
+  // One visit concept: "Nueva consulta" is THE action. Everything else waits in "…".
+  const primaryAction: ContextAction | undefined = canWriteClinical
+    ? { id: "new-consultation", label: "Nueva consulta", icon: <Stethoscope size={18} />, onClick: () => createConsultation.mutate(), loading: createConsultation.isPending, disabled: !effectiveSelectedPatientId, title: "Crear la nota de la visita de hoy" }
+    : { id: "view-history", label: "Ver historial", icon: <History size={18} />, onClick: () => setTab("history"), title: "Consultas, recetas y documentos del paciente" };
+  const secondaryActions = ["create-invoice", "open-billing", "register-episode", "update-data", "open-documents"]
+    .map((id) => contextualActions.find((a) => a.id === id)!)
+    .filter((a) => canBilling || (a.id !== "create-invoice" && a.id !== "open-billing"));
+  const patientCount = patients?.length ?? 0;
 
-      <div className="patients-profile-column" ref={profileColumnRef}>
-        {effectiveSelectedPatientId && (
-          <section className="patients-focus-header">
-            <div className="patients-focus-copy">
-              <span className="patients-focus-label">Paciente en prioridad</span>
-              <strong>{selectedPatient?.full_name || effectiveSelectedPatientId}</strong>
-            </div>
-            <Button variant="secondary" size="sm" onClick={handleToggleFocusMode}>
-              {patientFocusMode ? "Mostrar listado" : "Modo exclusivo"}
-            </Button>
-          </section>
-        )}
+  const profileActions = effectiveSelectedPatientId ? (
+    <ActionBar
+      className="patients-inline-actions"
+      label="Acciones de paciente"
+      primary={primaryAction}
+      secondary={secondaryActions}
+      inlineLimit={0}
+    />
+  ) : null;
 
-        <section className="patients-inline-actions" aria-label="Acciones de paciente">
-          {contextualActions.map((action) => (
-            <Button
-              key={action.id}
-              variant={
-                action.id === "register-episode" || action.id === "create-invoice"
-                  ? "primary"
-                  : "secondary"
-              }
-              onClick={action.onClick}
-              disabled={action.disabled}
-              isLoading={Boolean(action.loading)}
-              title={action.title}
-              size="sm"
-            >
-              <span className="patients-inline-action-label">
-                {action.icon}
-                <span>{action.label}</span>
-              </span>
-            </Button>
-          ))}
-        </section>
-        {(actionMessage || actionError) && (
-          <section className="patients-inline-feedback" aria-live="polite">
-            {actionMessage && <p className="patients-inline-feedback-success">{actionMessage}</p>}
-            {actionError && <p className="patients-inline-feedback-error">{actionError}</p>}
-          </section>
-        )}
-
-        {showEpisodeForm && effectiveSelectedPatientId && (
-          <section className="patients-episode-form">
-            <h4 className="patients-episode-form-title">Nuevo episodio clínico</h4>
-            <div className="patients-episode-form-row">
+  const profileForms = (
+    <>
+      {showEpisodeForm && effectiveSelectedPatientId && (
+          <section className="patients-episode-form form-stack">
+            <h2 className="patients-episode-form-title">Nuevo episodio clínico</h2>
+            <div className="patients-episode-form-row form-grid">
               <label>
                 Tipo de episodio
                 <input
@@ -505,8 +481,8 @@ export default function PatientsPage() {
                 placeholder="Contexto clínico del episodio..."
               />
             </label>
-            <div className="patients-episode-form-actions">
-              <Button variant="secondary" size="sm" onClick={() => setShowEpisodeForm(false)}>
+            <div className="patients-episode-form-actions form-actions">
+              <Button variant="gray" onClick={() => setShowEpisodeForm(false)}>
                 Cancelar
               </Button>
               <Button
@@ -522,9 +498,9 @@ export default function PatientsPage() {
         )}
 
         {showInvoiceForm && effectiveSelectedPatientId && (
-          <section className="patients-episode-form">
-            <h4 className="patients-episode-form-title">Nueva factura</h4>
-            <div className="patients-episode-form-row">
+          <section className="patients-episode-form form-stack">
+            <h2 className="patients-episode-form-title">Nueva factura</h2>
+            <div className="patients-episode-form-row form-grid">
               <label>
                 Fecha de emisión *
                 <input
@@ -546,7 +522,7 @@ export default function PatientsPage() {
                 />
               </label>
             </div>
-            <div className="patients-episode-form-row">
+            <div className="patients-episode-form-row form-grid">
               <label>
                 Item (opcional)
                 <input
@@ -596,8 +572,8 @@ export default function PatientsPage() {
                 placeholder="Notas internas de la factura..."
               />
             </label>
-            <div className="patients-episode-form-actions">
-              <Button variant="secondary" size="sm" onClick={() => setShowInvoiceForm(false)}>
+            <div className="patients-episode-form-actions form-actions">
+              <Button variant="gray" onClick={() => setShowInvoiceForm(false)}>
                 Cancelar
               </Button>
               <Button
@@ -613,8 +589,8 @@ export default function PatientsPage() {
         )}
 
         {showNotesForm && effectiveSelectedPatientId && (
-          <section className="patients-episode-form">
-            <h4 className="patients-episode-form-title">Editar notas del expediente</h4>
+          <section className="patients-episode-form form-stack">
+            <h2 className="patients-episode-form-title">Editar notas del expediente</h2>
             <label>
               Notas
               <textarea
@@ -625,8 +601,8 @@ export default function PatientsPage() {
                 placeholder="Escribe observaciones clínicas o administrativas..."
               />
             </label>
-            <div className="patients-episode-form-actions">
-              <Button variant="secondary" size="sm" onClick={() => setShowNotesForm(false)}>
+            <div className="patients-episode-form-actions form-actions">
+              <Button variant="gray" onClick={() => setShowNotesForm(false)}>
                 Cancelar
               </Button>
               <Button
@@ -640,8 +616,73 @@ export default function PatientsPage() {
             </div>
           </section>
         )}
+    </>
+  );
+
+  return (
+    <div
+      className={`patients-page ${patientFocusMode ? "patient-focus-mode" : ""} ${
+        effectiveSelectedPatientId ? "has-selection" : ""
+      }`}
+    >
+      <aside className="patients-list-column" aria-label="Listado de pacientes">
+        <header className="patients-list-head">
+          <h1 className="patients-list-title">Pacientes</h1>
+          {patientCount > 0 && <span className="patients-list-count">{patientCount} en seguimiento</span>}
+        </header>
+        {filterInfo && (
+          <div className="patients-filter" aria-live="polite">
+            <Pill tone="warning" removable onRemove={clearFilter} removeLabel="Quitar filtro">
+              {filterInfo.loaded ? `${filterInfo.label} · ${filterInfo.count.toLocaleString("es-DO")}` : filterInfo.label}
+            </Pill>
+            {filterInfo.loaded && visiblePatients && visiblePatients.length < filterInfo.count && (
+              <span className="patients-filter-note">{`Mostrando ${visiblePatients.length} de ${filterInfo.count.toLocaleString("es-DO")}: la alerta solo enumera los más urgentes.`}</span>
+            )}
+          </div>
+        )}
+        <label className="search-field glow-border glow-focus">
+          <Search size={18} aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Buscar paciente"
+            aria-label="Buscar paciente"
+            className="search-input"
+            enterKeyHint="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+        </label>
+        <PatientList
+          patients={visiblePatients}
+          notes={filterInfo?.notes}
+          emptyMessage={filterInfo ? (filterInfo.loaded ? "Ningún paciente coincide con esta alerta. Quita el filtro para ver a todos." : undefined) : searchQuery ? `Ningún paciente coincide con «${searchQuery}». Revisa el nombre o el documento.` : undefined}
+          isLoading={patientsLoading || (!!filterInfo && alertsQuery.isLoading)}
+          isError={patientsError}
+          selectedId={effectiveSelectedPatientId}
+          onSelect={handleSelectPatient}
+          onRetry={refetchPatients}
+        />
+      </aside>
+
+      <div className="patients-profile-column" ref={profileColumnRef}>
+        {effectiveSelectedPatientId && (
+          <section className="patients-focus-header">
+            <button type="button" className="page-header-back patients-back" onClick={handleToggleFocusMode}>
+              <ChevronLeft size={20} aria-hidden="true" />
+              <span>Pacientes</span>
+            </button>
+            <Button variant="gray" size="sm" className="patients-focus-toggle" onClick={handleToggleFocusMode}>
+              {patientFocusMode ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+              <span>{patientFocusMode ? "Mostrar listado" : "Ocultar listado"}</span>
+            </Button>
+          </section>
+        )}
 
         <PatientProfile
+          tab={tab}
+          onTabChange={setTab}
+          headerActions={profileActions}
+          headerExtra={profileForms}
           profile={patientProfile ?? null}
           isLoading={patientLoading}
           isError={patientError}

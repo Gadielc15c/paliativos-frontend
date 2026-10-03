@@ -1,45 +1,18 @@
-/* 3-column layout: sidebar | content | contextual panel */
-.app-layout-container {
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  grid-template-rows: 1fr;
-  height: 100vh;
-  background-color: var(--bg-main);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-}
-
-.app-layout-main-content {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.app-layout-content-area {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  flex: 1;
-  overflow: hidden;
-}
-
-.app-layout-center-panel {
-  overflow-y: auto;
-  padding: var(--space-6);
-  background-color: var(--bg-main);
-}
-
-/* Sidebar collapse state */
-.app-layout-container.sidebarCollapsed {
-  grid-template-columns: 60px 1fr;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .app-layout-container {
-    grid-template-columns: 1fr;
-  }
-
-  .app-layout-content-area {
-    grid-template-columns: 1fr;
-  }
+.app-layout-container { display: grid; grid-template-columns: 248px minmax(0,1fr); height: 100dvh; background: var(--background); color: var(--foreground); }
+.app-layout-container.sidebar-collapsed { grid-template-columns: 80px minmax(0,1fr); }
+.app-layout-main-content { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.app-layout-content-area { position: relative; display: grid; grid-template-columns: minmax(0,1fr); flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scroll-padding-top: 24px; }
+.app-layout-center-panel { padding: 32px 40px 48px; min-width: 0; }
+/* Readable measure on wide screens: content never stretches into a wall of columns. */
+.app-layout-center-panel > * { max-width: 1200px; margin-inline: auto; }
+.contextual-panel { display: none; }
+@media (min-width: 1800px) { .app-layout-content-area:has(.contextual-panel) { grid-template-columns: minmax(0,1fr) 300px; } .contextual-panel { display: flex; } }
+.sidebar-backdrop { display: none; }
+@media (max-width: 1100px) { .app-layout-center-panel { padding: 28px 24px 40px; } }
+@media (max-width: 768px) {
+  .app-layout-container, .app-layout-container.sidebar-collapsed { display: block; }
+  /* The scroll area ends above the fixed tab bar so sticky form bars sit right on top of it. */
+  .app-layout-main-content { height: 100dvh; padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  .app-layout-center-panel { padding: 20px 16px 32px; }
+  .sidebar-backdrop { display: none !important; }
 }

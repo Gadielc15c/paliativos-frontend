@@ -1,24 +1,29 @@
+import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import Badge from "../../../components/common/Badge";
+import Pill from "../../../components/common/Pill";
 import type { ApiError } from "../../../types/common";
 import Button from "../../../components/common/Button";
+import DataList from "../../../components/common/DataList";
+import PageHeader from "../../../components/common/PageHeader";
+import { ChevronLeft, RefreshCw } from "lucide-react";
 import { Empty, Error, Loading } from "../../../components/states/StateContainers";
 import { episodesEndpoints, patientsEndpoints } from "../../../services/endpoints";
 import { formatDateTime } from "../../../utils/format";
 import "./EpisodesPage.css";
+import { label } from "../../../utils/labels";
 
 const getStatusVariant = (
   status: string
-): "success" | "warning" | "error" | "info" | "neutral" => {
+): "success" | "warning" | "danger" | "info" | "neutral" => {
   switch (status) {
     case "open":
       return "success";
     case "closed":
       return "info";
     case "cancelled":
-      return "error";
+      return "danger";
     default:
       return "neutral";
   }
@@ -34,8 +39,6 @@ export default function EpisodesPage() {
   const [editNotes, setEditNotes] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [savingEpisode, setSavingEpisode] = useState(false);
-  const [editMessage, setEditMessage] = useState<string | null>(null);
-  const [editError, setEditError] = useState<string | null>(null);
 
   const {
     data,
@@ -80,17 +83,13 @@ export default function EpisodesPage() {
     setEditDiagnosis(selectedEpisode.diagnosis || "");
     setEditNotes(selectedEpisode.notes || "");
     setEditEndDate(selectedEpisode.end_date ? selectedEpisode.end_date.slice(0, 10) : "");
-    setEditMessage(null);
-    setEditError(null);
-  }, [selectedEpisode?.id]);
+    }, [selectedEpisode?.id]);
 
   const handleSaveEpisode = () => {
     if (!selectedEpisode) return;
 
     const run = async () => {
       setSavingEpisode(true);
-      setEditMessage(null);
-      setEditError(null);
       try {
         await episodesEndpoints.update(selectedEpisode.id, {
           status: editStatus,
@@ -99,10 +98,10 @@ export default function EpisodesPage() {
           end_date: editEndDate ? new Date(`${editEndDate}T00:00:00`).toISOString() : null,
         });
         await refetch();
-        setEditMessage("Episodio actualizado correctamente.");
+        toast.success("Episodio actualizado correctamente.");
       } catch (error) {
         const apiError = error as ApiError;
-        setEditError(apiError.message || "No se pudo actualizar el episodio.");
+        toast.error(apiError.message || "No se pudo actualizar el episodio.");
       } finally {
         setSavingEpisode(false);
       }
@@ -119,140 +118,88 @@ export default function EpisodesPage() {
     return <Error message="No se pudieron cargar episodios." onRetry={() => void refetch()} />;
   }
 
+  const detailOpen = Boolean(selectedEpisodeId);
+  const selectedPatient = selectedEpisode ? data.patientsById[selectedEpisode.patient_id] : null;
+
   return (
-    <div className="data-screen">
-      <section className="data-screen-header">
-        <div className="data-screen-copy">
-          <span className="data-screen-eyebrow">Gestión clínica</span>
-          <h1>Episodios clínicos</h1>
-          <p className="data-screen-description">
-            Seguimiento clínico por paciente, con acceso rápido a estado, diagnóstico y notas.
-          </p>
-          {patientIdFilter && (
-            <p className="data-screen-description">
-              Filtro activo por paciente: <strong>{patientIdFilter}</strong>
-            </p>
-          )}
-        </div>
-        <div className="data-screen-actions">
-          <Button variant="secondary" onClick={() => void refetch()} isLoading={isFetching}>
-            Actualizar
+    <div className={`data-screen episodes-page ${detailOpen ? "detail-open" : ""}`}>
+      <PageHeader
+        className="episodes-header"
+        eyebrow="Gestión clínica"
+        title="Episodios clínicos"
+        description="Seguimiento clínico por paciente: estado, diagnóstico y notas."
+        actions={
+          <Button variant="gray" onClick={() => void refetch()} isLoading={isFetching}>
+            <RefreshCw size={18} aria-hidden="true" />
+            <span>Actualizar</span>
           </Button>
-        </div>
-      </section>
+        }
+        filters={patientIdFilter ? <Pill tone="info">Filtrado por paciente</Pill> : undefined}
+      />
 
       {data.episodes.length === 0 ? (
-        <Empty message="No hay episodios registrados para este contexto." />
+        <Empty message="Aún no hay episodios. Las visitas nuevas se registran con «Nueva consulta» desde la ficha del paciente." />
       ) : (
-        <section className="data-split">
-          <article className="data-card">
-            <header className="data-card-header">
-              <div>
-                <h2 className="data-card-title">Lista de episodios</h2>
-                <p className="data-card-subtitle">{data.episodes.length} registros</p>
-              </div>
-            </header>
-            <div className="data-card-body">
-              <div className="data-list">
-                {data.episodes.map((episode) => {
-                  const patient = data.patientsById[episode.patient_id];
-                  return (
-                    <button
-                      key={episode.id}
-                      type="button"
-                      className="data-list-item"
-                      onClick={() => setSelectedEpisodeId(episode.id)}
-                      style={{
-                        borderColor:
-                          selectedEpisode?.id === episode.id
-                            ? "var(--accent-primary)"
-                            : "var(--border-subtle)",
-                      }}
-                    >
-                      <div className="data-list-copy">
-                        <div className="data-list-title">{episode.episode_type}</div>
-                        <div className="data-list-meta">
-                          {patient?.full_name || episode.patient_id} · {formatDateTime(episode.start_date)}
-                        </div>
-                        <div className="data-list-meta">
-                          {episode.diagnosis || episode.notes || "Sin resumen clínico"}
-                        </div>
-                      </div>
-                      <Badge variant={getStatusVariant(episode.status)}>{episode.status}</Badge>
-                    </button>
-                  );
-                })}
-              </div>
+        <section className="data-split is-master-detail episodes-split">
+          <div className="section-group episodes-list">
+            <div className="section-group-header">
+              <h2 className="section-group-title">Episodios</h2>
+              <span className="section-group-meta">{data.episodes.length} registros</span>
             </div>
-          </article>
+            <DataList
+              label="Episodios"
+              layout="cards"
+              rows={data.episodes}
+              rowKey={(episode) => episode.id}
+              selectedKey={selectedEpisode?.id ?? null}
+              onRowClick={(episode) => setSelectedEpisodeId(episode.id)}
+              title={(episode) => data.patientsById[episode.patient_id]?.full_name || episode.patient_id}
+              subtitle={(episode) => `${episode.episode_type} · ${formatDateTime(episode.start_date)}`}
+              detail={(episode) => (
+                <span className="episodes-list-summary">{episode.diagnosis || episode.notes || "Sin resumen clínico"}</span>
+              )}
+              status={(episode) => <Pill tone={getStatusVariant(episode.status)}>{label("episodeStatus", episode.status)}</Pill>}
+              columns={[]}
+            />
+          </div>
 
-          <article className="data-card">
-            <header className="data-card-header">
-              <div>
-                <h2 className="data-card-title">Detalle del episodio</h2>
-                <p className="data-card-subtitle">
-                  {selectedEpisode ? selectedEpisode.id : "Selecciona un episodio"}
-                </p>
-              </div>
-            </header>
-            <div className="data-card-body">
-              {!selectedEpisode ? (
-                <Empty message="Selecciona un episodio para ver detalle." />
-              ) : (
-                <div className="data-list">
-                  <div className="data-list-item">
-                    <div className="data-list-copy">
-                      <div className="data-list-title">{selectedEpisode.episode_type}</div>
-                      <div className="data-list-meta">
-                        Paciente:{" "}
-                        {data.patientsById[selectedEpisode.patient_id]?.full_name ||
-                          selectedEpisode.patient_id}
-                      </div>
+          <div className="episodes-detail">
+            <button type="button" className="page-header-back episodes-back" onClick={() => setSelectedEpisodeId(null)}>
+              <ChevronLeft size={20} aria-hidden="true" />
+              <span>Episodios</span>
+            </button>
+            {!selectedEpisode ? (
+              <Empty message="Elige un episodio de la lista para ver su detalle." />
+            ) : (
+              <>
+                <article className="data-card episodes-detail-card">
+                  <header className="episodes-detail-head">
+                    <div className="episodes-detail-heading">
+                      <span className="page-header-eyebrow">{selectedEpisode.episode_type}</span>
+                      <h2 className="episodes-detail-title">{selectedPatient?.full_name || selectedEpisode.patient_id}</h2>
                     </div>
-                    <Badge variant={getStatusVariant(selectedEpisode.status)}>
-                      {selectedEpisode.status}
-                    </Badge>
-                  </div>
-                  <div className="data-stat-grid">
-                    <article className="data-stat-card">
-                      <span className="data-stat-label">Inicio</span>
-                      <strong className="data-stat-value">
-                        {formatDateTime(selectedEpisode.start_date)}
-                      </strong>
-                    </article>
-                    <article className="data-stat-card">
-                      <span className="data-stat-label">Fin</span>
-                      <strong className="data-stat-value">
-                        {selectedEpisode.end_date ? formatDateTime(selectedEpisode.end_date) : "Abierto"}
-                      </strong>
-                    </article>
-                    <article className="data-stat-card">
-                      <span className="data-stat-label">Aseguradora</span>
-                      <strong className="data-stat-value">
-                        {selectedEpisode.insurer_name || "Sin registro"}
-                      </strong>
-                    </article>
-                  </div>
-                  <div className="data-list-item">
-                    <div className="data-list-copy">
-                      <div className="data-list-title">Diagnóstico</div>
-                      <div className="data-list-meta">
-                        {selectedEpisode.diagnosis || "Sin diagnóstico explícito"}
-                      </div>
+                    <Pill tone={getStatusVariant(selectedEpisode.status)}>{label("episodeStatus", selectedEpisode.status)}</Pill>
+                  </header>
+                  <dl className="kv-list">
+                    <div className="kv-row"><dt>Inicio</dt><dd>{formatDateTime(selectedEpisode.start_date)}</dd></div>
+                    <div className="kv-row"><dt>Fin</dt><dd>{selectedEpisode.end_date ? formatDateTime(selectedEpisode.end_date) : "Abierto"}</dd></div>
+                    <div className="kv-row"><dt>Aseguradora</dt><dd>{selectedEpisode.insurer_name || "Sin registro"}</dd></div>
+                  </dl>
+                  <div className="episodes-notes">
+                    <div className="episodes-note">
+                      <h3>Diagnóstico</h3>
+                      <p>{selectedEpisode.diagnosis || "Sin diagnóstico explícito"}</p>
+                    </div>
+                    <div className="episodes-note">
+                      <h3>Notas</h3>
+                      <p>{selectedEpisode.notes || "Sin notas registradas"}</p>
                     </div>
                   </div>
-                  <div className="data-list-item">
-                    <div className="data-list-copy">
-                      <div className="data-list-title">Notas</div>
-                      <div className="data-list-meta">
-                        {selectedEpisode.notes || "Sin notas registradas"}
-                      </div>
-                    </div>
-                  </div>
+                </article>
 
-                  <section className="episodes-edit-panel">
-                    <h3>Editar episodio</h3>
-                    <div className="episodes-edit-grid">
+                  <section className="episodes-edit-panel data-card form-stack">
+                    <h2 className="data-card-title">Editar episodio</h2>
+                    <div className="episodes-edit-grid form-grid">
                       <label>
                         Estado
                         <select
@@ -261,9 +208,9 @@ export default function EpisodesPage() {
                             setEditStatus(event.target.value as "open" | "closed" | "cancelled")
                           }
                         >
-                          <option value="open">open</option>
-                          <option value="closed">closed</option>
-                          <option value="cancelled">cancelled</option>
+                          <option value="open">{label("episodeStatus", "open")}</option>
+                          <option value="closed">{label("episodeStatus", "closed")}</option>
+                          <option value="cancelled">{label("episodeStatus", "cancelled")}</option>
                         </select>
                       </label>
                       <label>
@@ -292,9 +239,9 @@ export default function EpisodesPage() {
                         placeholder="Notas clínicas del episodio"
                       />
                     </label>
-                    <div className="episodes-edit-actions">
+                    <div className="episodes-edit-actions form-actions">
                       <Button
-                        variant="secondary"
+                        variant="gray"
                         onClick={() => {
                           if (!selectedEpisode) return;
                           setEditStatus(selectedEpisode.status);
@@ -303,23 +250,18 @@ export default function EpisodesPage() {
                           setEditEndDate(
                             selectedEpisode.end_date ? selectedEpisode.end_date.slice(0, 10) : ""
                           );
-                          setEditMessage(null);
-                          setEditError(null);
-                        }}
+                          }}
                       >
                         Revertir
                       </Button>
-                      <Button onClick={handleSaveEpisode} isLoading={savingEpisode}>
+                      <Button className="glow-border" onClick={handleSaveEpisode} isLoading={savingEpisode}>
                         Guardar cambios
                       </Button>
                     </div>
-                    {editMessage && <p className="episodes-edit-message success">{editMessage}</p>}
-                    {editError && <p className="episodes-edit-message error">{editError}</p>}
                   </section>
-                </div>
-              )}
-            </div>
-          </article>
+              </>
+            )}
+          </div>
         </section>
       )}
     </div>

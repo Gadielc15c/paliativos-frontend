@@ -1,3 +1,4 @@
+import { useId } from "react";
 import "./Input.css";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -14,7 +15,8 @@ export default function Input({
   id,
   ...props
 }: InputProps) {
-  const inputId = id || `input-${Math.random()}`;
+  const generatedId = useId();
+  const inputId = id || generatedId;
 
   return (
     <div className="input-container">

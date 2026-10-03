@@ -1,6 +1,7 @@
+import clsx from "clsx";
 import "./Button.css";
 
-type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "danger" | "ghost" | "filled" | "tinted" | "gray" | "plain" | "destructive";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -21,7 +22,8 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`button button-${variant} button-${size} ${className}`}
+      className={clsx("button", `button-${variant}`, `button-${size}`, className)}
+      aria-busy={isLoading || undefined}
       disabled={disabled || isLoading}
       {...props}
     >

@@ -5,3 +5,7 @@ dist/
 !.env.example
 *.log
 .vite*.log
+
+.ui-shots/
+.npm-cache/
+.env*.local

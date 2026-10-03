@@ -67,16 +67,16 @@ const DEFAULT_PREFERENCES: UiPreferences = {
   fontScale: "normal",
   accentPreset: "electric",
   accentMode: "preset",
-  customAccent: "#0052FF",
-  customAccentSecondary: "#4D7CFF",
-  gradientMode: "gradient",
+  customAccent: "#007AFF",
+  customAccentSecondary: "#0A84FF",
+  gradientMode: "solid",
   buttonStyle: "elevated",
   radiusMode: "soft",
   glassOpacity: 0.82,
-  glassBlur: 14,
+  glassBlur: 20,
   backgroundIntensity: 1,
   gradientAngle: 135,
-  elevationLevel: "balanced",
+  elevationLevel: "subtle",
   motionLevel: "full",
   transitionEffect: "fade",
 };
@@ -101,17 +101,14 @@ const ACCENT_PRESET_VALUES: Record<
   AccentPreset,
   { accent: string; secondary: string }
 > = {
-  electric: { accent: "#0052FF", secondary: "#4D7CFF" },
+  electric: { accent: "#007AFF", secondary: "#0A84FF" },
   teal: { accent: "#0B8F8A", secondary: "#39BFB9" },
   violet: { accent: "#5B4DFF", secondary: "#8A7CFF" },
   sunset: { accent: "#D97706", secondary: "#F59E0B" },
 };
 
-const FONT_FAMILY_VALUES: Record<FontFamilyOption, string> = {
-  inter: "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-  ibm: "\"IBM Plex Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-  system: "-apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-};
+const PLATFORM_FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif';
+const FONT_FAMILY_VALUES: Record<FontFamilyOption, string> = { inter: PLATFORM_FONT, ibm: PLATFORM_FONT, system: PLATFORM_FONT };
 
 const FONT_SCALE_VALUES: Record<FontScaleOption, string> = {
   compact: "0.94",
@@ -330,6 +327,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     root.setAttribute("data-gradient-mode", preferences.gradientMode);
     root.setAttribute("data-elevation-level", preferences.elevationLevel);
     root.setAttribute("data-motion", preferences.motionLevel);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      "content", theme === "dark" ? "#0b1220" : theme === "calm" ? "#f7f8f4" : "#fafafa"
+    );
 
     root.style.setProperty("--font-sans", FONT_FAMILY_VALUES[preferences.fontFamily]);
     root.style.setProperty("--font-scale", FONT_SCALE_VALUES[preferences.fontScale]);

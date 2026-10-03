@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import gsap from "gsap";
+import Pill from "../../../components/common/Pill";
+import { useEffect, useMemo, useState } from "react";
 import {
   AccentMode,
   AccentPreset,
@@ -16,16 +16,18 @@ import {
 import { systemEndpoints } from "../../../services/endpoints";
 import type { SystemStatusResponse } from "../../../types/api";
 import Button from "../../../components/common/Button";
+import PageHeader from "../../../components/common/PageHeader";
+import { useNavigate } from "react-router-dom";
 import "./ConfigPage.css";
 
 const themeOptions: Array<{ id: AppTheme; label: string; description: string }> = [
   { id: "light", label: "Claro", description: "Mayor contraste para ambientes bien iluminados." },
   { id: "dark", label: "Oscuro", description: "Reduce fatiga visual en jornadas largas." },
-  { id: "calm", label: "Calma", description: "Paleta suave enfocada en lectura clinica." },
+  { id: "calm", label: "Calma", description: "Paleta suave enfocada en lectura clínica." },
 ];
 
 const accentOptions: Array<{ id: AccentPreset; label: string }> = [
-  { id: "electric", label: "Electrico" },
+  { id: "electric", label: "Eléctrico" },
   { id: "teal", label: "Turquesa" },
   { id: "violet", label: "Violeta" },
   { id: "sunset", label: "Ambar" },
@@ -34,12 +36,12 @@ const accentOptions: Array<{ id: AccentPreset; label: string }> = [
 const fontOptions: Array<{ id: FontFamilyOption; label: string }> = [
   { id: "inter", label: "Inter" },
   { id: "ibm", label: "IBM Plex Sans" },
-  { id: "system", label: "System UI" },
+  { id: "system", label: "Del sistema" },
 ];
 
 const fontScaleOptions: Array<{ id: FontScaleOption; label: string }> = [
   { id: "compact", label: "Compacta" },
-  { id: "normal", label: "Estandar" },
+  { id: "normal", label: "Estándar" },
   { id: "large", label: "Amplia" },
 ];
 
@@ -61,14 +63,14 @@ const elevationOptions: Array<{ id: ElevationLevel; label: string }> = [
 ];
 
 const motionOptions: Array<{ id: MotionLevel; label: string }> = [
-  { id: "off", label: "Sin animacion" },
+  { id: "off", label: "Sin animación" },
   { id: "soft", label: "Suave" },
   { id: "full", label: "Completa" },
 ];
 
 const transitionOptions: Array<{ id: TransitionEffect; label: string }> = [
-  { id: "none", label: "Instantaneo" },
-  { id: "fade", label: "Transicion suave" },
+  { id: "none", label: "Instantáneo" },
+  { id: "fade", label: "Transición suave" },
 ];
 
 const normalizeServiceStatus = (value: unknown): "ok" | "degraded" | "down" | "unknown" => {
@@ -88,20 +90,20 @@ const normalizeServiceStatus = (value: unknown): "ok" | "degraded" | "down" | "u
 };
 
 export default function ConfigPage() {
+  const navigate = useNavigate();
   const { theme, setTheme, preferences, setPreference, resetPreferences } = useTheme();
   const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
-  const pageRef = useRef<HTMLDivElement | null>(null);
 
   const statusRows = useMemo(
     () =>
       systemStatus
         ? [
-            { label: "Backend", value: systemStatus.backend },
+            { label: "Servidor", value: systemStatus.backend },
             { label: "Base de datos", value: systemStatus.database },
-            { label: "MinIO", value: systemStatus.minio },
-            { label: "LLM", value: systemStatus.llm },
+            { label: "Almacenamiento de archivos", value: systemStatus.minio },
+            { label: "Asistente de IA", value: systemStatus.llm },
           ]
         : [],
     [systemStatus]
@@ -128,99 +130,27 @@ export default function ConfigPage() {
     void loadSystemStatus();
   }, []);
 
-  useLayoutEffect(() => {
-    const root = pageRef.current;
-    if (!root) {
-      return;
-    }
-
-    const prefersReducedMotion = globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const motionLevel = document.documentElement.getAttribute("data-motion") || "full";
-    const motionFactor = motionLevel === "soft" ? 0.72 : motionLevel === "off" ? 0 : 1;
-    if (prefersReducedMotion || motionFactor === 0) {
-      return;
-    }
-
-    const t = (duration: number) => duration * motionFactor;
-    const ctx = gsap.context(() => {
-      gsap.from(".config-page .data-card", {
-        opacity: 0,
-        y: 12,
-        duration: t(0.45),
-        ease: "power2.out",
-        stagger: t(0.05),
-      });
-
-      gsap.to(".config-ambient-orb.a", {
-        xPercent: -8,
-        yPercent: 6,
-        scale: 1.08,
-        duration: t(8.6),
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
-      gsap.to(".config-ambient-orb.b", {
-        xPercent: 7,
-        yPercent: -8,
-        scale: 1.1,
-        duration: t(9.4),
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
-      gsap.to(".config-ambient-orb.c", {
-        xPercent: -6,
-        yPercent: -5,
-        duration: t(10.2),
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
-
-      gsap.to(".config-preview-badge-dot", {
-        scale: 1.3,
-        opacity: 0.62,
-        duration: t(1.5),
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
-    }, root);
-
-    return () => ctx.revert();
-  }, [preferences.motionLevel, theme]);
-
   return (
-    <div className="data-screen config-page" ref={pageRef}>
+    <div className="data-screen config-page">
       <div className="config-ambient" aria-hidden>
         <div className="config-ambient-orb a" />
         <div className="config-ambient-orb b" />
         <div className="config-ambient-orb c" />
       </div>
 
-      <section className="data-screen-header">
-        <div className="data-screen-copy">
-          <span className="data-screen-eyebrow">Ajustes de interfaz</span>
-          <h1>Centro de personalizacion visual</h1>
-          <p className="data-screen-description">
-            Ajusta tipografia, color, degradados, cristal y movimiento para adaptar la experiencia
-            por usuario.
-          </p>
-        </div>
-        <div className="data-screen-actions">
-          <Button variant="secondary" onClick={resetPreferences}>
-            Restaurar estilos base
-          </Button>
-        </div>
-      </section>
+      <PageHeader
+        back={{ label: "Administración", onClick: () => navigate("/admin") }}
+        title="Ajustes visuales"
+        description="Tema, tamaño de letra, color y movimiento. Los cambios se guardan solo en este dispositivo."
+        actions={<Button variant="gray" onClick={resetPreferences}>Restaurar valores iniciales</Button>}
+      />
 
       <section className="config-grid">
         <article className="data-card">
           <header className="data-card-header">
             <div>
               <h2 className="data-card-title">Tema global</h2>
-              <p className="data-card-subtitle">Define la base cromatica principal de la app.</p>
+              <p className="data-card-subtitle">Define la base cromática principal de la app.</p>
             </div>
           </header>
           <div className="data-card-body">
@@ -286,7 +216,7 @@ export default function ConfigPage() {
             <div>
               <h2 className="data-card-title">Color y degradado</h2>
               <p className="data-card-subtitle">
-                Control fino sobre acentos, mezcla de color y direccion del gradiente.
+                Control fino sobre acentos, mezcla de color y dirección del degradado.
               </p>
             </div>
           </header>
@@ -349,7 +279,7 @@ export default function ConfigPage() {
                   setPreference("gradientMode", event.target.checked ? "gradient" : "solid")
                 }
               />
-              <span>Aplicar degradados en elementos de accion y resaltado</span>
+              <span>Aplicar degradados en elementos de acción y resaltado</span>
             </label>
 
             {preferences.gradientMode === "gradient" && (
@@ -370,7 +300,7 @@ export default function ConfigPage() {
         <article className="data-card">
           <header className="data-card-header">
             <div>
-              <h2 className="data-card-title">Composicion visual</h2>
+              <h2 className="data-card-title">Composición visual</h2>
               <p className="data-card-subtitle">Controla fondo ambiental, transparencia y blur.</p>
             </div>
           </header>
@@ -425,7 +355,7 @@ export default function ConfigPage() {
           </header>
           <div className="data-card-body config-controls">
             <label className="config-field">
-              <span>Tipografia</span>
+              <span>Tipografía</span>
               <select
                 value={preferences.fontFamily}
                 onChange={(event) => setPreference("fontFamily", event.target.value as FontFamilyOption)}
@@ -481,7 +411,7 @@ export default function ConfigPage() {
             </label>
 
             <label className="config-field">
-              <span>Nivel de elevacion</span>
+              <span>Nivel de elevación</span>
               <select
                 value={preferences.elevationLevel}
                 onChange={(event) =>
@@ -546,7 +476,7 @@ export default function ConfigPage() {
           <div>
             <h2 className="data-card-title">Estado del sistema</h2>
             <p className="data-card-subtitle">
-              Monitoreo rapido de servicios clave antes de iniciar tareas operativas.
+              Monitoreo rápido de servicios clave antes de iniciar tareas operativas.
             </p>
           </div>
           <Button variant="secondary" onClick={() => void loadSystemStatus()} isLoading={statusLoading}>
@@ -562,9 +492,9 @@ export default function ConfigPage() {
                 const status = normalizeServiceStatus(row.value);
                 return (
                   <div className="config-status-item" key={row.label}>
-                    <span className={`config-status-dot ${status}`} />
+
                     <span>{row.label}</span>
-                    <strong>{status.toUpperCase()}</strong>
+                    <Pill tone={status === "ok" ? "success" : status === "down" ? "danger" : status === "degraded" ? "warning" : "neutral"}>{status === "ok" ? "Disponible" : status === "down" ? "No disponible" : status === "degraded" ? "Limitado" : "Sin comprobar"}</Pill>
                   </div>
                 );
               })}

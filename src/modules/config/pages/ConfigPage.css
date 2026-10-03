@@ -74,9 +74,9 @@
 .config-field > span {
   font-size: var(--text-xs);
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   letter-spacing: 0.04em;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .config-theme-grid {
@@ -100,15 +100,17 @@
   text-align: left;
   display: grid;
   gap: 2px;
-  transition: all 0.2s ease;
+  transition: color 160ms ease-out, background-color 160ms ease-out, border-color 160ms ease-out, box-shadow 160ms ease-out, opacity 160ms ease-out, transform 160ms ease-out;
   color: var(--text-primary);
   box-shadow: var(--shadow-xs);
 }
-
+@media (hover: hover) and (pointer: fine) {
 .config-theme-option:hover {
   border-color: color-mix(in srgb, var(--accent-primary) 40%, var(--border-subtle));
   box-shadow: var(--shadow-sm);
 }
+}
+
 
 .config-theme-option.active {
   border-color: color-mix(in srgb, var(--accent-primary) 65%, transparent);
@@ -199,9 +201,9 @@
   border: 1px solid color-mix(in srgb, var(--accent-primary) 34%, transparent);
   background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
   padding: 6px 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-family: var(--font-mono);
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
   font-size: var(--text-xs);
   color: var(--accent-primary);
 }
@@ -222,9 +224,9 @@
 .config-preview-input-wrap label {
   font-size: var(--text-xs);
   color: var(--text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   letter-spacing: 0.05em;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .config-preview-input-wrap input {
@@ -273,7 +275,7 @@
 }
 
 .config-status-item strong {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-xs);
   color: var(--text-muted);
   letter-spacing: 0.04em;
@@ -309,3 +311,19 @@
 .config-status-message.error {
   color: var(--state-error);
 }
+
+.config-page { gap: 32px; }
+.config-ambient { display: none; }
+.config-grid { gap: 24px; }
+.config-controls { gap: 0; }
+.config-field { padding-block: 20px; gap: 12px; border-bottom: 1px solid var(--border); }
+.config-field:first-child { padding-top: 0; }
+.config-field:last-child { border-bottom: 0; padding-bottom: 0; }
+.config-field > span { font-size: 15px; color: var(--foreground); letter-spacing: 0; }
+.config-theme-option { padding: 20px; gap: 8px; white-space: normal; background: var(--surface); box-shadow: none; }
+.config-preview-card { padding: 24px; background: var(--surface); box-shadow: var(--card-shadow); gap: 20px; }
+.config-status-item { padding: 20px; background: var(--surface); box-shadow: var(--card-shadow); }
+.config-status-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; border-color: var(--border); }
+.config-status-item strong { font-size: .9375rem; color: var(--foreground); letter-spacing: 0; }
+:root .config-field input[type="checkbox"] { width: 22px; height: 22px; }
+@media (max-width: 768px) { .config-status-grid { grid-template-columns: minmax(0, 1fr); } }

@@ -1,22 +1,19 @@
+import Pill from "../../components/common/Pill";
 import { useAppStore } from "../store/useAppStore";
-import { User, LogOut, Menu } from "lucide-react";
+import { User, LogOut } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import BrandMark from "./BrandMark";
+import { label } from "../../utils/labels";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { clearSession } from "../../services/auth";
 
 export default function TopBar() {
-  const { user, toggleSidebarMobile, setUser, setPermissions } = useAppStore();
+  const { user, setUser, setPermissions } = useAppStore();
   const [showMenu, setShowMenu] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
-  const roleLabel =
-    user?.role === "admin"
-      ? "Administrador"
-      : user?.role === "doctor"
-      ? "Médico"
-      : user?.role === "secretary"
-      ? "Secretaría"
-      : "Sesión";
+  const roleLabel = user?.role ? label("role", user.role) : "Sesión";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -36,7 +33,7 @@ export default function TopBar() {
 
   const handleOpenSession = () => {
     setShowMenu(false);
-    navigate("/config");
+    navigate("/admin");
   };
 
   const handleLogout = () => {
@@ -48,28 +45,23 @@ export default function TopBar() {
 
   return (
     <header className="top-bar">
-      <div className="top-bar-branding">
-        <button
-          className="top-bar-menu-button"
-          onClick={toggleSidebarMobile}
-          aria-label="Abrir menú"
-        >
-          <Menu size={18} />
-        </button>
-        <h1 className="top-bar-title">PALIATIVOS</h1>
-      </div>
+      {/* Phones have no sidebar: the app name lives here. On desktop the sidebar shows it. */}
+      <NavLink to="/" className="top-bar-branding" aria-label="Paliativos · Inicio">
+        <BrandMark size={28} />
+        <span className="top-bar-title">Paliativos</span>
+      </NavLink>
 
       <div className="top-bar-spacer" />
 
       <div className="top-bar-user-section">
         <div className="top-bar-user-info">
-          <span className="top-bar-user-name">{user?.name || "Sesión activa"}</span>
-          <span className="top-bar-user-role">{roleLabel}</span>
+          <span className="top-bar-user-name" title={user?.name}>{user?.name || "Sesión activa"}</span>
+          <Pill tone="info">{roleLabel}</Pill>
         </div>
         <div className="top-bar-user-menu-container" ref={menuContainerRef}>
           <button
-            className="top-bar-user-button" 
-            title="User menu"
+            className="top-bar-user-button"
+            title="Menú de sesión"
             onClick={() => setShowMenu(!showMenu)}
           >
             <User size={18} />

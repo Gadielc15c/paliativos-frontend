@@ -1,0 +1,69 @@
+import { useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
+import clsx from "clsx";
+import { LogOut, MoreHorizontal } from "lucide-react";
+import { useAppStore } from "../store/useAppStore";
+import { clearSession } from "../../services/auth";
+import { ADMIN_GROUPS, NAV_ITEMS, isNavActive } from "./navigation";
+import "../../components/common/ActionMenu.css";
+import "./TabBar.css";
+
+/**
+ * Phone navigation: Inicio, Pacientes, Epidemiología, Facturación + "Más" (the Administración hub).
+ * Translucent, safe-area aware. Hidden above 768px.
+ */
+export default function TabBar() {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const { permissions, setUser, setPermissions } = useAppStore();
+  const tabs = NAV_ITEMS.filter((i) => i.path !== "/admin" && (!i.permission || permissions.includes(i.permission)));
+  const admin = NAV_ITEMS.find((i) => i.path === "/admin")!;
+  const more = ADMIN_GROUPS.flatMap((g) => g.items).filter((m) => !m.permission || permissions.includes(m.permission));
+  const moreActive = isNavActive(admin, pathname);
+
+  return (
+    <>
+      <nav className="tab-bar" aria-label="Navegación principal" style={{ gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))` }}>
+        {tabs.map((item) => {
+          const active = isNavActive(item, pathname);
+          return (
+            <NavLink key={item.path} to={item.path} end={item.path === "/"} className={clsx("tab-bar-item", active && "is-active")} aria-current={active ? "page" : undefined}>
+              <item.icon size={22} aria-hidden="true" />
+              <span>{item.label}</span>
+            </NavLink>
+          );
+        })}
+        <button type="button" className={clsx("tab-bar-item", moreActive && "is-active")} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(true)}>
+          <MoreHorizontal size={22} aria-hidden="true" />
+          <span>Más</span>
+        </button>
+      </nav>
+      {open && createPortal(
+        <div className="action-menu-layer is-sheet" onClick={() => setOpen(false)}>
+          <div className="action-menu-panel" role="menu" aria-label="Administración" onClick={(e) => e.stopPropagation()}>
+            <p className="action-menu-title">Administración</p>
+            <div className="action-menu-group tab-bar-more">
+              {more.map(({ label, path, icon: Icon }) => (
+                <button key={path} type="button" role="menuitem"
+                  className={clsx("action-menu-item", pathname.startsWith(path) && "is-current")}
+                  onClick={() => { setOpen(false); navigate(path); }}>
+                  <span className="action-menu-icon" aria-hidden="true"><Icon size={20} /></span>
+                  <span className="action-menu-label">{label}</span>
+                </button>
+              ))}
+              <button type="button" role="menuitem" className="action-menu-item is-destructive"
+                onClick={() => { setOpen(false); clearSession(); setPermissions([]); setUser(null); navigate("/"); }}>
+                <span className="action-menu-icon" aria-hidden="true"><LogOut size={20} /></span>
+                <span className="action-menu-label">Cerrar sesión</span>
+              </button>
+            </div>
+            <button type="button" className="action-menu-cancel" onClick={() => setOpen(false)}>Cancelar</button>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}

@@ -201,8 +201,10 @@ export interface SystemStatusResponse {
 export interface ConsultationRecord {
   id: string;
   patient_id: string;
-  date: string;
-  reason: string | null;
+  doctor_id: string;
+  created_by_user_id: string | null;
+  consultation_date: string;
+  reason: string;
   notes: string | null;
   created_at: string;
   updated_at: string;

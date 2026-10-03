@@ -1,14 +1,18 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import PatientsPage from "../../modules/patients/pages";
 import BillingPage from "../../modules/billing/pages";
 import EpisodesPage from "../../modules/episodes/pages";
-import FinancePage from "../../modules/finance/pages";
 import DocumentsPage from "../../modules/documents/pages";
 import ReportsPage from "../../modules/reports/pages";
 import AuditPage from "../../modules/audit/pages";
-import SecretariesPage from "../../modules/secretaries/pages";
 import ConfigPage from "../../modules/config/pages";
+import EpiPage from "../../modules/epi/pages/EpiPage";
+import ConsultationPage from "../../modules/consultations/pages/ConsultationPage";
+import StaffPage from "../../modules/staff/pages/StaffPage";
+import HomePage from "../../modules/home/pages/HomePage";
+import AdminPage from "../../modules/admin/pages/AdminPage";
+import { RequirePermission } from "../../utils/usePermission";
 
 export const router = createBrowserRouter([
   {
@@ -17,7 +21,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <PatientsPage />,
+        element: <HomePage />,
       },
       {
         path: "patients",
@@ -32,8 +36,9 @@ export const router = createBrowserRouter([
         element: <EpisodesPage />,
       },
       {
+        // Movimientos now lives under Facturación as a tab.
         path: "finance",
-        element: <FinancePage />,
+        element: <Navigate to="/billing?tab=movimientos" replace />,
       },
       {
         path: "documents",
@@ -48,12 +53,29 @@ export const router = createBrowserRouter([
         element: <AuditPage />,
       },
       {
+        // Secretaries are managed in Equipo (one list for doctors and secretaries).
         path: "secretaries",
-        element: <SecretariesPage />,
+        element: <Navigate to="/equipo?role=secretary" replace />,
+      },
+      {
+        path: "admin",
+        element: <AdminPage />,
       },
       {
         path: "config",
         element: <ConfigPage />,
+      },
+      {
+        path: "epidemiologia",
+        element: <RequirePermission permissions={["epi:read"]}><EpiPage /></RequirePermission>,
+      },
+      {
+        path: "consultations/:consultationId",
+        element: <RequirePermission permissions={["clinical:read"]}><ConsultationPage /></RequirePermission>,
+      },
+      {
+        path: "equipo",
+        element: <RequirePermission permissions={["staff:manage"]}><StaffPage /></RequirePermission>,
       },
     ],
   },

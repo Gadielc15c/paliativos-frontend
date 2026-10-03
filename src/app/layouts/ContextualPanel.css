@@ -1,40 +1,11 @@
-import styles from "./ContextualPanel.module.css";
-
-.panel {
-  background-color: var(--bg-elevated);
-  border-left: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
-}
-
-.header {
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-
-.header h3 {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin: 0;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.content {
-  flex: 1;
-  padding: var(--space-4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.placeholder {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  text-align: center;
-}
+.contextual-panel { flex-direction: column; gap: 24px; padding: 24px; border-left: 1px solid var(--border); background: var(--surface); }
+.contextual-panel-header h3 { font-size: 17px; }
+.contextual-panel-content, .contextual-panel-group { display: grid; gap: 24px; }
+.contextual-panel-group { gap: 12px; }
+.contextual-panel-placeholder { font-size: 13px; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.contextual-panel-links { display: flex; flex-direction: column; gap: 12px; }
+.contextual-link { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border: 0; border-radius: 12px; color: var(--accent); background: var(--accent-soft); font: 500 15px/1.5 var(--font-sans); }
+.contextual-panel-summary-row { display: grid; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.contextual-panel-summary-row dt { color: var(--muted-foreground); font-size: 13px; }
+.contextual-panel-alerts { display: grid; gap: 12px; }
+.contextual-panel-alert { display: flex; gap: 8px; padding: 12px; border-radius: 12px; background: var(--warning-soft); color: var(--warning-foreground); }

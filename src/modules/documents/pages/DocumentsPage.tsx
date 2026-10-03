@@ -1,9 +1,11 @@
+import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
-import { gsap } from "gsap";
-import { AlertTriangle, UploadCloud } from "lucide-react";
-import Badge from "../../../components/common/Badge";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Sparkles, UploadCloud } from "lucide-react";
+import DataList from "../../../components/common/DataList";
+import PageHeader from "../../../components/common/PageHeader";
+import Pill from "../../../components/common/Pill";
 import Button from "../../../components/common/Button";
 import Input from "../../../components/common/Input";
 import { Error as ErrorState, Loading } from "../../../components/states/StateContainers";
@@ -11,6 +13,7 @@ import { documentsEndpoints, patientsEndpoints } from "../../../services/endpoin
 import type { DocumentExtractionResultRecord, DocumentRecord } from "../../../types/api";
 import type { ApiError } from "../../../types/common";
 import { formatDateTime } from "../../../utils/format";
+import { label } from "../../../utils/labels";
 import ExtractionValidationModal from "../components/ExtractionValidationModal";
 import "./DocumentsPage.css";
 
@@ -22,7 +25,7 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 const getStatusVariant = (
   value: string | null | undefined
-): "success" | "warning" | "error" | "info" | "neutral" => {
+): "success" | "warning" | "danger" | "info" | "neutral" => {
   if (!value) return "neutral";
   if (["approved", "applied", "ready", "classified", "validated"].includes(value)) {
     return "success";
@@ -30,7 +33,7 @@ const getStatusVariant = (
   if (["manual_review", "pending", "uploaded", "extracted"].includes(value)) {
     return "warning";
   }
-  if (["failed", "rejected"].includes(value)) return "error";
+  if (["failed", "rejected"].includes(value)) return "danger";
   return "info";
 };
 
@@ -46,6 +49,7 @@ const validateSelectedFile = (selectedFile: File | null): string | null => {
 };
 
 export default function DocumentsPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const patientIdFromRoute = searchParams.get("patientId");
 
@@ -58,15 +62,11 @@ export default function DocumentsPage() {
   const [supportNote, setSupportNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isWaitingBackend, setIsWaitingBackend] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [validationModal, setValidationModal] = useState<{
     document: DocumentRecord;
     extractionResult: DocumentExtractionResultRecord;
   } | null>(null);
 
-  const waitingDotsRef = useRef<HTMLSpanElement | null>(null);
-  const cardsRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -123,49 +123,17 @@ export default function DocumentsPage() {
     setSelectedPatientId(patientIdFromRoute);
   }, [patientIdFromRoute]);
 
-  useEffect(() => {
-    if (!cardsRef.current) return;
-    const cards = cardsRef.current.querySelectorAll(".data-card, .data-screen-header");
-    const tween = gsap.fromTo(
-      cards,
-      { opacity: 0, y: 18 },
-      {
-        opacity: 1,
-        y: 0,
-        stagger: 0.05,
-        duration: 0.4,
-        ease: "power2.out",
-      }
-    );
-    return () => {
-      tween.kill();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isWaitingBackend || !waitingDotsRef.current) return;
-    const tween = gsap.to(waitingDotsRef.current, {
-      opacity: 0.2,
-      duration: 0.55,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut",
-    });
-    return () => {
-      tween.kill();
-      gsap.set(waitingDotsRef.current, { opacity: 1 });
-    };
-  }, [isWaitingBackend]);
-
   const handleOpenValidationModal = async (doc: DocumentRecord) => {
     try {
       const resultsPage = await documentsEndpoints.listExtractionResults(doc.id, 1, 1);
       const result = resultsPage.items[0];
       if (result) {
         setValidationModal({ document: doc, extractionResult: result });
+      } else {
+        toast.info("Este documento todavía no tiene una extracción disponible.");
       }
     } catch {
-      // silently ignore — doc list still shows
+      toast.error("No se pudo cargar la extracción del documento.");
     }
   };
 
@@ -173,9 +141,6 @@ export default function DocumentsPage() {
     const validationError = validateSelectedFile(nextFile);
     setFile(nextFile);
     setFileError(validationError);
-    if (!validationError) {
-      setFeedbackError(null);
-    }
   };
 
   const waitForBackgroundPatientLink = async (documentId: string) => {
@@ -223,14 +188,11 @@ export default function DocumentsPage() {
     const validationError = validateSelectedFile(file);
     if (validationError) {
       setFileError(validationError);
-      setFeedbackError(validationError);
+      toast.error(validationError);
       return;
     }
 
     setIsSubmitting(true);
-    setFeedback(null);
-    setFeedbackError(null);
-
     try {
       let patientId = selectedPatientId || patientIdFromRoute || null;
 
@@ -279,16 +241,16 @@ export default function DocumentsPage() {
           processed.metadata || null
         );
         await refetchDocuments();
-        setFeedback(
+        toast.info(
           "Documento recibido. Quedó pendiente de revisión humana para completar clasificación/asociación."
         );
         return;
       }
 
-      setFeedback(`Documento subido y procesado (${predicted}).`);
+      toast.success(`Documento subido y procesado (${predicted}).`);
     } catch (error) {
       const apiError = error as ApiError;
-      setFeedbackError(apiError.message || "No se pudo subir el documento.");
+      toast.error(apiError.message || "No se pudo subir el documento.");
     } finally {
       setIsWaitingBackend(false);
       setIsSubmitting(false);
@@ -314,8 +276,11 @@ export default function DocumentsPage() {
     );
   }
 
+  const patientName = (d: DocumentRecord) =>
+    patientMap[d.patient_id || ""] || patientMap[d.matched_patient_id || ""] || "Sin paciente";
+
   return (
-    <div className="data-screen documents-page-simple" ref={cardsRef}>
+    <div className="data-screen documents-page-simple">
       {validationModal && (
         <ExtractionValidationModal
           document={validationModal.document}
@@ -324,10 +289,22 @@ export default function DocumentsPage() {
         />
       )}
 
+      <PageHeader
+        back={{ label: "Administración", onClick: () => navigate("/admin") }}
+        eyebrow="Documentos"
+        title="Subir documento"
+        description="Elige el paciente (opcional), adjunta el archivo y súbelo. La IA lo clasifica y extrae los datos."
+        filters={
+          patientIdFromRoute ? (
+            <Pill tone="info">Paciente: {patientMap[patientIdFromRoute] || patientIdFromRoute}</Pill>
+          ) : undefined
+        }
+      />
+
       {docsNeedingReview.length > 0 && (
-        <section className="docs-review-banner" aria-live="polite">
-          <AlertTriangle size={16} />
-          <span>
+        <section className="docs-review-banner glow-border" data-tone="ai" aria-live="polite">
+          <Sparkles size={18} aria-hidden="true" />
+          <span className="docs-review-banner-text">
             {docsNeedingReview.length === 1
               ? "1 documento requiere revisión de extracción IA"
               : `${docsNeedingReview.length} documentos requieren revisión de extracción IA`}
@@ -342,33 +319,19 @@ export default function DocumentsPage() {
         </section>
       )}
 
-      <section className="data-screen-header docs-header-compact">
-        <div className="data-screen-copy">
-          <span className="data-screen-eyebrow">Documentos</span>
-          <h1>Subir documento del paciente</h1>
-          <p className="data-screen-description">
-            Selecciona paciente (opcional), sube archivo y listo.
-          </p>
-          {patientIdFromRoute && (
-            <p className="data-screen-description">
-              Paciente activo: <strong>{patientMap[patientIdFromRoute] || patientIdFromRoute}</strong>
-            </p>
-          )}
-        </div>
-      </section>
 
-      <section className="data-split docs-main-grid">
+      <section className="data-split docs-main-grid" aria-label="Nuevo documento">
         <article className="data-card">
           <header className="data-card-header">
             <div>
-              <h2 className="data-card-title">Paciente</h2>
-              <p className="data-card-subtitle">Opcional</p>
+              <h2 className="data-card-title"><span className="docs-step">1</span>Paciente</h2>
+              <p className="data-card-subtitle">Opcional · se asocia automáticamente si lo omites</p>
             </div>
           </header>
           <div className="data-card-body docs-simple-body">
             <Input
               label="Buscar paciente"
-              placeholder="Buscar por nombre, cédula o expediente"
+              placeholder="Nombre, cédula o expediente"
               value={patientSearch}
               onChange={(event) => setPatientSearch(event.target.value)}
             />
@@ -396,7 +359,7 @@ export default function DocumentsPage() {
         <article className="data-card">
           <header className="data-card-header">
             <div>
-              <h2 className="data-card-title">Archivo</h2>
+              <h2 className="data-card-title"><span className="docs-step">2</span>Archivo</h2>
               <p className="data-card-subtitle">PDF, JPG o PNG. Máx. {MAX_FILE_SIZE_MB} MB.</p>
             </div>
           </header>
@@ -428,7 +391,7 @@ export default function DocumentsPage() {
                 setSelectedFile(droppedFile);
               }}
             >
-              <UploadCloud size={22} />
+              <UploadCloud size={28} aria-hidden="true" />
               <strong>{file ? file.name : "Arrastra archivo o haz clic para seleccionar"}</strong>
               <span>PDF, JPG, PNG</span>
             </button>
@@ -459,21 +422,21 @@ export default function DocumentsPage() {
               Enviar a revisión humana si no se puede asociar automáticamente
             </label>
 
-            <Button variant="primary" onClick={() => void handleProcess()} isLoading={isSubmitting}>
-              Subir documento
-            </Button>
+            <div className="form-actions docs-submit">
+              <Button variant="primary" className="glow-border" onClick={() => void handleProcess()} isLoading={isSubmitting}>
+                <UploadCloud size={18} aria-hidden="true" />
+                <span>Subir documento</span>
+              </Button>
+            </div>
 
             {isWaitingBackend && (
               <div className="docs-simple-waiting" role="status" aria-live="polite">
                 <span className="docs-simple-waiting-text">Identificando paciente</span>
-                <span ref={waitingDotsRef} className="docs-simple-waiting-dots">
+                <span className="docs-simple-waiting-dots">
                   ...
                 </span>
               </div>
             )}
-
-            {feedback && <p className="docs-simple-feedback success">{feedback}</p>}
-            {feedbackError && <p className="docs-simple-feedback error">{feedbackError}</p>}
           </div>
         </article>
       </section>
@@ -483,63 +446,37 @@ export default function DocumentsPage() {
           <header className="data-card-header">
             <div>
               <h2 className="data-card-title">Recientes</h2>
+              <p className="data-card-subtitle">{recentDocuments.length} documentos</p>
             </div>
           </header>
           <div className="data-card-body">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Documento</th>
-                  <th>Tipo</th>
-                  <th>Paciente</th>
-                  <th>Proceso</th>
-                  <th>Revisión</th>
-                  <th>Fecha</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentDocuments.map((document) => (
-                  <tr key={document.id}>
-                    <td>{document.title}</td>
-                    <td>
-                      <Badge variant={getStatusVariant(document.processing_status)}>
-                        {document.predicted_document_type_code || "-"}
-                      </Badge>
-                    </td>
-                    <td>
-                      {patientMap[document.patient_id || ""] ||
-                        patientMap[document.matched_patient_id || ""] ||
-                        "Sin paciente"}
-                    </td>
-                    <td>
-                      <Badge variant={getStatusVariant(document.processing_status)}>
-                        {document.processing_status}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Badge variant={getStatusVariant(document.review_status)}>
-                        {document.review_status}
-                      </Badge>
-                    </td>
-                    <td>{formatDateTime(document.created_at)}</td>
-                    <td>
-                      {document.review_required && document.review_status === "manual_review" && (
-                        <button
-                          type="button"
-                          className="docs-review-action-btn"
-                          onClick={() => void handleOpenValidationModal(document)}
-                          title="Revisar extracción IA"
-                        >
-                          <AlertTriangle size={13} />
-                          Revisar
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataList
+              label="Documentos recientes"
+              rows={recentDocuments}
+              rowKey={(d) => d.id}
+              title={(d) => d.title}
+              subtitle={(d) => `${patientName(d)} · ${formatDateTime(d.created_at)}`}
+              status={(d) => <Pill tone={getStatusVariant(d.review_status)}>{label("documentReview", d.review_status)}</Pill>}
+              detail={(d) => (
+                <span className="docs-card-pills">
+                  <Pill tone="neutral">{d.predicted_document_type_code ? label("documentType", d.predicted_document_type_code) : "Sin tipo"}</Pill>
+                  <Pill tone={getStatusVariant(d.processing_status)}>{label("documentProcessing", d.processing_status)}</Pill>
+                </span>
+              )}
+              actions={(d) =>
+                d.review_required && d.review_status === "manual_review"
+                  ? [{ label: "Revisar", title: "Revisar extracción IA", icon: <Sparkles size={16} aria-hidden="true" />, onClick: () => void handleOpenValidationModal(d) }]
+                  : []
+              }
+              columns={[
+                { key: "title", header: "Documento", cell: (d) => <span className="docs-cell-title">{d.title}</span>, width: "28%" },
+                { key: "patient", header: "Paciente", cell: (d) => patientName(d) },
+                { key: "type", header: "Tipo", cell: (d) => <Pill tone="neutral">{d.predicted_document_type_code ? label("documentType", d.predicted_document_type_code) : "Sin tipo"}</Pill> },
+                { key: "process", header: "Proceso", cell: (d) => <Pill tone={getStatusVariant(d.processing_status)}>{label("documentProcessing", d.processing_status)}</Pill> },
+                { key: "review", header: "Revisión", cell: (d) => <Pill tone={getStatusVariant(d.review_status)}>{label("documentReview", d.review_status)}</Pill> },
+                { key: "date", header: "Fecha", cell: (d) => formatDateTime(d.created_at), numeric: true },
+              ]}
+            />
           </div>
         </section>
       )}

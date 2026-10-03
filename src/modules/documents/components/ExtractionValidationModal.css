@@ -10,12 +10,12 @@
 }
 
 .extraction-modal {
-  background: var(--bg-surface);
+  background: var(--surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   width: 100%;
   max-width: 560px;
-  max-height: 90vh;
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -55,10 +55,12 @@
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
-
+@media (hover: hover) and (pointer: fine) {
 .extraction-modal-close:hover {
   color: var(--text-primary);
 }
+}
+
 
 .extraction-modal-confidence-banner {
   padding: var(--space-2) var(--space-4);
@@ -137,7 +139,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.04em;
 }
 
@@ -167,7 +169,7 @@
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  background: var(--surface);
   color: var(--text-primary);
   font-size: 0.9rem;
   width: 100%;
@@ -214,7 +216,7 @@
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  background: var(--surface);
   color: var(--text-primary);
   font-size: 0.88rem;
   width: 100%;
@@ -227,3 +229,12 @@
   outline: none;
   border-color: var(--color-accent, #2563eb);
 }
+
+.extraction-modal-overlay {
+  padding-top: max(var(--space-4), env(safe-area-inset-top, 0px));
+  padding-bottom: max(var(--space-4), env(safe-area-inset-bottom, 0px));
+  padding-left: max(var(--space-4), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--space-4), env(safe-area-inset-right, 0px));
+}
+.extraction-modal { max-height: 100%; }
+.extraction-modal-body { overscroll-behavior: contain; }

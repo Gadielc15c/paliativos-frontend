@@ -1,0 +1,26 @@
+.staff-name { display: grid; gap: 2px; min-width: 0; }
+.staff-status { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.dl-table .staff-status { justify-content: flex-start; }
+.staff-banner { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 14px 16px; border-radius: 14px; background: var(--danger-soft); color: var(--foreground); font-size: .9375rem; line-height: 1.5; }
+.staff-banner svg { flex: none; margin-top: 2px; color: var(--status-critical); }
+.staff-hint { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--muted-foreground); font-size: .875rem; line-height: 1.5; }
+.staff-hint svg { flex: none; margin-top: 2px; color: var(--success-foreground); }
+.staff-field { display: grid; gap: 8px; font-size: .9375rem; font-weight: 500; }
+.staff-password-field { grid-column: 1 / -1; }
+.staff-password-row { display: flex; gap: 12px; align-items: center; }
+.staff-password-row input { flex: 1 1 auto; font-family: var(--font-mono); letter-spacing: .02em; }
+.staff-password-row .button { flex: none; }
+.staff-missing { margin: 0; color: var(--muted-foreground); font-size: .875rem; }
+.staff-credentials { display: grid; gap: 16px; }
+.staff-cred-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; }
+.staff-cred-label { grid-column: 1 / -1; color: var(--muted-foreground); font-size: .875rem; font-weight: 600; }
+.staff-cred-row code { min-width: 0; padding: 12px 14px; border-radius: 12px; background: var(--surface-muted); font-size: 1rem; overflow-wrap: anywhere; }
+.staff-cred-row code.staff-cred-password { font-size: 1.25rem; letter-spacing: .06em; }
+.staff-page .staff-segmented { flex: 0 0 auto; width: auto; min-width: 500px; max-width: none; }
+.staff-page .staff-search { flex: 1 1 260px; max-width: 420px; }
+.staff-flag-line { display: inline-flex; margin-top: 4px; }
+@media (max-width: 768px) {
+  .staff-page .page-header-filters { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding: 0; }
+  .staff-page .staff-segmented { flex: 1 1 100%; min-width: 0; }
+  .staff-page .staff-search { flex: 1 1 100%; max-width: none; }
+}

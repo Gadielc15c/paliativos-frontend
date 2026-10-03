@@ -3,18 +3,18 @@
   --font-scale: 1;
 
   /* Minimalist Modern Core */
-  --background: #fafafa;
-  --foreground: #0f172a;
+  --background: #f2f2f7;
+  --foreground: #1c1c1e;
   --surface: #ffffff;
   --surface-rgb: 255, 255, 255;
-  --surface-muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --border: #e2e8f0;
-  --ring: #0052ff;
-  --accent: #0052ff;
-  --accent-secondary: #4d7cff;
+  --surface-muted: #f2f2f7;
+  --muted-foreground: #63636b;
+  --border: rgba(0, 0, 0, 0.06);
+  --ring: #007aff;
+  --accent: #007aff;
+  --accent-secondary: #0a84ff;
   --accent-foreground: #ffffff;
-  --accent-gradient: linear-gradient(135deg, #0052ff, #4d7cff);
+  --accent-gradient: linear-gradient(135deg, #007aff, #0a84ff);
   --accent-soft: rgba(0, 82, 255, 0.1);
   --accent-shadow: rgba(0, 82, 255, 0.28);
   --accent-shadow-strong: rgba(0, 82, 255, 0.38);
@@ -29,9 +29,32 @@
 
   /* Semantic */
   --state-success: #1a7f37;
-  --state-warning: #d97706;
+  --state-warning: #925000;
   --state-error: #cf222e;
-  --state-info: #0052ff;
+  --state-info: #174fc4;
+  --state-danger: var(--state-error);
+  --state-ai: #7138ad;
+  --state-neutral: var(--muted-foreground);
+  --touch-target: 44px;
+  --shadow-outline: 0 0 0 1px color-mix(in srgb, var(--foreground) 14%, transparent);
+
+  --neutral-foreground: var(--state-neutral);
+  --neutral-soft: color-mix(in srgb, var(--state-neutral) 12%, var(--surface));
+
+  --success-foreground: var(--state-success);
+  --success-soft: color-mix(in srgb, var(--state-success) 12%, var(--surface));
+
+  --warning-foreground: var(--state-warning);
+  --warning-soft: color-mix(in srgb, var(--state-warning) 12%, var(--surface));
+
+  --danger-foreground: var(--state-danger);
+  --danger-soft: color-mix(in srgb, var(--state-danger) 12%, var(--surface));
+
+  --info-foreground: var(--state-info);
+  --info-soft: color-mix(in srgb, var(--state-info) 12%, var(--surface));
+
+  --ai-foreground: var(--state-ai);
+  --ai-soft: color-mix(in srgb, var(--state-ai) 12%, var(--surface));
 
   /* Compatibility aliases (existing app) */
   --bg-main: var(--background);
@@ -53,12 +76,14 @@
   /* Shadows */
   --shadow-xs: 0 1px 3px rgba(15, 23, 42, 0.08);
   --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.1);
-  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.14);
   --shadow-accent: 0 8px 24px var(--accent-shadow);
   --shadow-accent-lg: 0 16px 36px var(--accent-shadow-strong);
 
   /* Spacing (4px base) */
+  --space-0: 0;
+  --space-0-5: 2px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -68,26 +93,28 @@
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
+  --space-16: 64px;
 
   /* Radius */
   --radius-none: 0;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-xs: 4px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
   --radius-pill: 999px;
 
   /* Typography */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Mono", "Fira Code", monospace;
-  --font-display: "Calistoga", Georgia, serif;
+  --font-display: var(--font-sans);
 
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
   --text-base: 1rem;
-  --text-lg: 1.125rem;
+  --text-lg: 1.0625rem;
   --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
+  --text-2xl: 1.375rem;
+  --text-3xl: 2.125rem;
 
   --font-normal: 400;
   --font-medium: 500;
@@ -95,7 +122,7 @@
   --font-bold: 700;
 
   --leading-tight: 1.2;
-  --leading-normal: 1.5;
+  --leading-normal: 1.6;
   --leading-relaxed: 1.7;
 
   /* Z-index */
@@ -138,22 +165,27 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: #0b1220;
-  --foreground: #e8eef8;
-  --surface: #111b2d;
-  --surface-rgb: 17, 27, 45;
-  --surface-muted: #0f1728;
-  --muted-foreground: #9bb0c7;
-  --border: #1f3047;
-  --ring: #4d7cff;
-  --accent: #4d7cff;
+  --state-success: #7ddba0;
+  --state-warning: #f4c06b;
+  --state-error: #ff969e;
+  --state-info: #94b9ff;
+  --state-ai: #d0a6ff;
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --surface: #1c1c1e;
+  --surface-rgb: 28, 28, 30;
+  --surface-muted: #2c2c2e;
+  --muted-foreground: #aeaeb2;
+  --border: rgba(255, 255, 255, 0.08);
+  --ring: #0a84ff;
+  --accent: #0a84ff;
   --accent-secondary: #6ea0ff;
   --accent-soft: rgba(77, 124, 255, 0.16);
   --accent-shadow: rgba(77, 124, 255, 0.32);
   --accent-shadow-strong: rgba(77, 124, 255, 0.44);
 
   --border-medium: #314563;
-  --bg-glass: rgba(12, 21, 35, 0.78);
+  --bg-glass: rgba(28, 28, 30, 0.8);
   --text-subtle: #7f96b2;
 
   --shadow-xs: 0 1px 3px rgba(2, 6, 16, 0.34);
@@ -170,7 +202,7 @@
   --surface-rgb: 255, 255, 255;
   --surface-muted: #edf2ee;
   --muted-foreground: #5c6f6a;
-  --border: #d7e2db;
+  --border: rgba(21, 32, 51, 0.12);
   --ring: #2a6fb5;
   --accent: #2a6fb5;
   --accent-secondary: #5c9bd9;
@@ -182,3 +214,36 @@
   --bg-glass: rgba(255, 255, 255, 0.82);
   --text-subtle: #83968f;
 }
+
+/* Semantic platform scale; compatibility names above remain for existing screens. */
+:root {
+  --text-caption: .75rem; --text-footnote: .8125rem; --text-subheadline: .9375rem;
+  --text-callout: 1rem; --text-body: 1.0625rem; --text-headline: 1.0625rem;
+  --text-title3: 1.25rem; --text-title2: 1.375rem; --text-title1: 1.75rem; --text-large-title: 2.125rem;
+  --state-teal: #087e8b; --state-success: #24833b; --state-warning: #a15c00; --state-error: #d32924; --state-ai: #8040c4;
+  --system-blue: #007aff; --system-green: #34c759; --system-orange: #ff9500; --system-red: #ff3b30; --system-teal: #30b0c7; --system-purple: #af52de;
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --card-shadow: 0 2px 4px rgba(0,0,0,.02), 0 8px 28px rgba(0,0,0,.035);
+  --shadow-outline: 0 0 0 1px var(--border);
+  --button-primary-bg: var(--accent); --button-primary-shadow: 0 1px 2px rgba(0,0,0,.08);
+  --button-primary-shadow-hover: 0 3px 12px rgba(0,122,255,.18);
+  --bg-surface: var(--surface);
+}
+:root[data-theme="dark"] { --state-success: #65d580; --state-warning: #ffb340; --state-error: #ff6961; --state-ai: #cf9fff; --state-teal: #64d2ff; --card-shadow: 0 2px 4px #0002, 0 8px 28px #0003; }
+
+:root { --fill-search: rgba(118,118,128,.12); }
+:root[data-theme="dark"] { --fill-search: rgba(118,118,128,.24); }
+
+/* Chart categorical slots (dataviz reference palette, validated: adjacent CVD ΔE ≥ 8.4, normal ≥ 19.8).
+   Fixed order, never cycled; slot follows the entity, not its rank. */
+:root {
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+  --chart-grid: rgba(0,0,0,.07); --chart-axis: #8e8e93; --chart-female: #2a78d6; --chart-male: #eb6834;
+}
+:root[data-theme="dark"] {
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+  --chart-grid: rgba(255,255,255,.08); --chart-axis: #8e8e93; --chart-female: #3987e5; --chart-male: #d95926;
+}
+
+/* Status (dataviz reference: fixed, never themed, always paired with icon + label). */
+:root { --status-good: #0ca30c; --status-warning: #fab219; --status-serious: #ec835a; --status-critical: #d03b3b; }

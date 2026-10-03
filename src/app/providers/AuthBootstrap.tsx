@@ -23,7 +23,9 @@ export function AuthBootstrap({ children }: AuthBootstrapProps) {
       setErrorMessage(null);
 
       try {
-        const session = await restoreSession();
+        const session = import.meta.env.DEV && new URLSearchParams(location.search).get("mock") === "1"
+          ? (await import("../../dev/mock")).previewSession
+          : await restoreSession();
         if (!isMounted) {
           return;
         }

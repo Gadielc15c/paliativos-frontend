@@ -1,112 +1,24 @@
-.billing-page {
-  display: grid;
-  grid-template-columns: minmax(340px, 42%) minmax(0, 1fr);
-  height: 100%;
-  min-height: 0;
-  gap: 0;
-  overflow: hidden;
-}
-
-.billing-list-column {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: var(--bg-main);
-  border-right: 1px solid var(--border-subtle);
-  overflow: hidden;
-  animation: slideInLeft 0.4s ease-out;
-}
-
-.billing-filter-banner {
-  padding: var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: var(--text-xs);
-  color: var(--accent-primary);
-  background: rgba(9, 105, 218, 0.08);
-}
-
-.billing-detail-column {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: var(--bg-main);
-  padding: var(--space-4);
-  overflow-y: auto;
-  animation: slideInRight 0.4s ease-out;
-  border-left: 1px solid var(--border-subtle);
-}
-
-.billing-detail-mobile-actions {
-  display: none;
-  margin-bottom: var(--space-3);
-}
-
-/* Tablet: Stack layout */
-@media (max-width: 1024px) {
-  .billing-page {
-    grid-template-columns: 1fr;
-    overflow: hidden;
-  }
-
-  .billing-list-column {
-    border-right: none;
-    max-height: none;
-    min-height: 0;
-  }
-
-  .billing-detail-column {
-    border-left: none;
-    border-top: none;
-    min-height: 0;
-  }
-
-  .billing-page:not(.detail-open) .billing-detail-column {
-    display: none;
-  }
-
-  .billing-page.detail-open .billing-list-column {
-    display: none;
-  }
-
-  .billing-page.detail-open .billing-detail-column {
-    display: flex;
-    overflow-y: auto;
-  }
-
-  .billing-detail-mobile-actions {
-    display: block;
-  }
-}
-
-/* Mobile: Full stack */
+/* Billing: title + Facturas | Movimientos, then invoice list (master) + detail. Phones show one at a time. */
+.billing-screen { display: grid; gap: 24px; }
+.billing-screen-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; }
+.billing-tabs { max-width: 320px; }
+.finance-embedded-head { align-items: center; }
+.billing-page { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 32px; align-items: start; }
+.billing-list-column { position: sticky; top: 0; display: grid; gap: 16px; align-content: start; max-height: calc(100dvh - 220px); overflow-y: auto; overscroll-behavior: contain; margin: -4px; padding: 4px 4px 8px; }
+.billing-list-head { display: grid; gap: 4px; padding: 0 4px; }
+.billing-list-title { margin: 0; font-size: var(--text-large-title); line-height: 1.15; letter-spacing: -.03em; font-weight: 700; }
+.billing-list-count { color: var(--muted-foreground); font-size: .9375rem; }
+.billing-filter-banner { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.billing-detail-column { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.billing-back { display: none; }
+@media (max-width: 1100px) { .billing-page { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 24px; } }
 @media (max-width: 768px) {
-  .billing-page {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .billing-list-column {
-    max-height: none;
-    min-height: 0;
-  }
-
-  .billing-detail-column {
-    min-height: 0;
-    padding: var(--space-3);
-  }
-
-  .billing-page:not(.detail-open) .billing-detail-column {
-    display: none;
-  }
-
-  .billing-page.detail-open .billing-list-column {
-    display: none;
-  }
-
-  .billing-page.detail-open .billing-detail-column {
-    display: flex;
-  }
+  .billing-page { display: block; }
+  .billing-list-column { position: static; max-height: none; overflow: visible; margin: 0; padding: 0; }
+  .billing-list-title { font-size: 1.75rem; }
+  .billing-page.detail-open .billing-list-column, .billing-page:not(.detail-open) .billing-detail-column { display: none; }
+  .billing-back { display: inline-flex; margin-bottom: -4px; }
+  .billing-screen { gap: 20px; }
+  .billing-screen.detail-open .billing-screen-head { display: none; }
+  .billing-tabs { max-width: none; }
 }

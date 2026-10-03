@@ -1,7 +1,9 @@
 import { Empty, Loading, Error } from "../../../components/states/StateContainers";
-import Badge from "../../../components/common/Badge";
+import Pill from "../../../components/common/Pill";
+import DataList from "../../../components/common/DataList";
 import type { PatientContract } from "../../../types/contracts";
 import { formatDate } from "../../../utils/format";
+import { label } from "../../../utils/labels";
 import "./PatientList.css";
 
 interface PatientListProps {
@@ -11,73 +13,38 @@ interface PatientListProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onRetry: () => void;
+  /** Per-patient note from an alert filter (e.g. "hace 64 días"); replaces "Actualizado …". */
+  notes?: Map<string, string>;
+  emptyMessage?: string;
 }
 
-const getStatusVariant = (status: string): "success" | "warning" | "info" => {
-  switch (status) {
-    case "active":
-      return "success";
-    case "deceased":
-      return "warning";
-    case "inactive":
-      return "info";
-    default:
-      return "info";
-  }
-};
+const getStatusVariant = (status: string): "success" | "warning" | "neutral" =>
+  status === "active" ? "success" : status === "deceased" ? "warning" : "neutral";
 
-export default function PatientList({
-  patients,
-  isLoading,
-  isError,
-  selectedId,
-  onSelect,
-  onRetry,
-}: PatientListProps) {
+export default function PatientList({ patients, isLoading, isError, selectedId, onSelect, onRetry, notes, emptyMessage }: PatientListProps) {
   if (isLoading) return <Loading />;
-  if (isError) return <Error onRetry={onRetry} />;
-  if (!patients || patients.length === 0) return <Empty message="Sin pacientes" />;
+  if (isError) return <Error message="No se pudo cargar la lista de pacientes." onRetry={onRetry} />;
+  if (!patients || patients.length === 0) return <Empty message={emptyMessage ?? "Aún no hay pacientes registrados. Cuando el equipo registre el primero aparecerá aquí."} />;
 
   return (
     <div className="patient-list">
-      <div className="patient-list-header">
-        <h2>Pacientes ({patients.length})</h2>
-      </div>
-
-      <div className="patient-list-items">
-        {patients.map((patient) => (
-          <button
-            key={patient.id}
-            className={`patient-list-item ${selectedId === patient.id ? "selected" : ""}`}
-            onClick={() => onSelect(patient.id)}
-          >
-            <div className="patient-list-item-row name">
-              <span className="label">Nombre</span>
-              <span className="value">{patient.name}</span>
-            </div>
-            <div className="patient-list-item-row doc">
-              <span className="label">Documento</span>
-              <span className="value">{patient.document}</span>
-            </div>
-            <div className="patient-list-item-row">
-              <span className="label">Doctor</span>
-              <span className="value">{patient.assignedDoctor || "—"}</span>
-            </div>
-            <div className="patient-list-item-row">
-              <span className="label">Estado</span>
-              <Badge variant={getStatusVariant(patient.status)}>
-                {patient.status.toUpperCase()}
-              </Badge>
-            </div>
-            <div className="patient-list-item-row">
-              <span className="label">Actualizado</span>
-              <span className="value" style={{ fontSize: "0.75rem" }}>
-                {formatDate(patient.updatedAt)}
-              </span>
-            </div>
-          </button>
-        ))}
-      </div>
+      <DataList
+        label="Pacientes"
+        layout="cards"
+        rows={patients}
+        rowKey={(p) => p.id}
+        selectedKey={selectedId}
+        onRowClick={(p) => onSelect(p.id)}
+        title={(p) => p.name}
+        subtitle={(p) => [p.document, p.assignedDoctor].filter(Boolean).join(" · ")}
+        detail={(p) => {
+          const note = notes?.get(p.id);
+          return note ? <span className="patient-list-note">{note}</span> : <span className="patient-list-updated">Actualizado {formatDate(p.updatedAt)}</span>;
+        }}
+        // Only non-default states get a pill: "Activo" on every row is noise.
+        status={(p) => (p.status !== "active" ? <Pill tone={getStatusVariant(p.status)}>{label("patientStatus", p.status)}</Pill> : undefined)}
+        columns={[]}
+      />
     </div>
   );
 }

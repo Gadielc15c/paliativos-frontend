@@ -1,6 +1,7 @@
 // Endpoint functions para Patients
 import { httpClient } from "../http";
-import type { ClinicalEventRecord, PageResponse, PatientProfileResponse, PatientRecord } from "../../types/api";
+import type { TimelineResponse, TimelineType } from "../../types/clinical";
+import type { PageResponse, PatientProfileResponse, PatientRecord } from "../../types/api";
 
 const normalizePageSize = (pageSize: number) => Math.min(100, Math.max(1, pageSize));
 
@@ -69,10 +70,13 @@ export const patientsEndpoints = {
     return response.data;
   },
 
-  getTimeline: async (id: string, limit = 100) => {
-    const response = await httpClient.get<ClinicalEventRecord[]>(`/patients/${id}/timeline`, {
-      params: { limit },
-    });
+  /** Grouped-by-day timeline (BREAKING in Fase 1: was ClinicalEventRecord[]). */
+  getTimeline: async (id: string, opts: { types?: TimelineType[]; page?: number; pageSize?: number } = {}) => {
+    const params = new URLSearchParams();
+    (opts.types ?? []).forEach((t) => params.append("type", t));
+    params.set("page", String(opts.page ?? 1));
+    params.set("page_size", String(normalizePageSize(opts.pageSize ?? 25)));
+    const response = await httpClient.get<TimelineResponse>(`/patients/${id}/timeline`, { params });
     return response.data;
   },
 };

@@ -54,4 +54,10 @@ export type Permission =
   | "documents:read"
   | "documents:write"
   | "reports:read"
-  | "audit:read";
+  | "audit:read"
+  | "clinical:read"
+  | "clinical:write"
+  | "consultations:sign"
+  | "epi:read"
+  | "ai:use"
+  | "staff:manage";
